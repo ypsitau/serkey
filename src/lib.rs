@@ -1,6 +1,6 @@
 #![no_std]
 
-mod win_key_codes;
+pub mod vk;
 
 pub struct Context {
 }
@@ -16,7 +16,7 @@ impl Context {
 }
 
 fn sub() {
-    win_key_codes::VK_A;
+    vk::A;
 
 }
 

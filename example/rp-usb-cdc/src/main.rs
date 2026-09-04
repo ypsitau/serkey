@@ -73,6 +73,7 @@ async fn main(_spawner: Spawner) {
             STATIC_CELL.init([0u8; 64])
         };
         let vtvk = vtvk::Context::new();
+        vtvk::vk::A;
         loop {
             cdc_receiver.wait_connection().await;
             info!("Connected");
