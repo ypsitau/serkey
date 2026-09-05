@@ -3,6 +3,8 @@ use heapless::Vec;
 
 pub mod vk;
 
+use vk::VK;
+
 #[derive(Debug, PartialEq, Eq)]
 enum Stat {
     First,
@@ -34,8 +36,9 @@ impl Context {
             buf_intermediate: Vec::new(),
         }
     }
-    pub fn feed(&mut self, byte: u8) -> Option<i32>{
+    pub fn feed(&mut self, byte: u8) -> VK {
         let mut cont_flag = true;
+        let mut vk = VK::None;
         while cont_flag {
             cont_flag = false;
             match self.stat {
@@ -98,19 +101,26 @@ impl Context {
                 Stat::CsiFinal => {
                     match byte {
                         0x41 => {           // 'A'
+                            vk = VK::UP;
                         }
                         0x42 => {           // 'B'
+                            vk = VK::DOWN;
                         }
                         0x43 => {           // 'C'
+                            vk = VK::RIGHT;
                         }
                         0x44 => {           // 'D'
+                            vk = VK::LEFT;
                         }
                         0x7e => {           // '~'
                             if self.buf_parameter.eq(&[0x31]) {         // '1'
-
+                                vk = VK::HOME;
                             } else if self.buf_parameter.eq(&[0x34]) {  // '4'
+                                vk = VK::END;
                             } else if self.buf_parameter.eq(&[0x35]) {  // '5'
+                                vk = VK::PRIOR;
                             } else if self.buf_parameter.eq(&[0x36]) {  // '6'
+                                vk = VK::NEXT;
                             }
                         }
                         _ => {}
@@ -132,7 +142,7 @@ impl Context {
             }
         }
         // Handle the key input here
-        None
+        vk
     }
 }
 
