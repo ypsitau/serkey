@@ -80,8 +80,8 @@ async fn main(_spawner: Spawner) {
                     Ok(n) => &buf[..n], Err(e) => break e,
                 };
                 info!("Read packet: {:02x}", buf_read);
-                for &b in buf_read {
-                    serkey_parser.push(b);
+                for &byte in buf_read {
+                    serkey_parser.push(byte);
                     while let Some(keycode) = serkey_parser.next_keycode() {
                         info!("Parsed: {:?}", keycode);
                     }

@@ -1,3 +1,29 @@
+//! A simple keycode parser for handling UTF-8 and control sequences.
+//! This crate provides a parser for interpreting keycodes from byte streams, including UTF-8 characters and control sequences.
+//! # Example
+//! 
+//! Add this crate as a dependency and use the `Parser` struct to parse keycodes from a byte stream.
+//! 
+//! ```rust
+//! fn test_parser(buf: &[u8]) {
+//!     let mut parser = serkey::Parser::new();
+//!     for &byte in buf {
+//!         parser.push(byte);
+//!         while let Some(keycode) = parser.next_keycode() {
+//!             match keycode {
+//!                 serkey::KeyCode::Char(ch) => info!("Char: {}", ch),
+//!                 serkey::KeyCode::Up => info!("Up"),
+//!                 serkey::KeyCode::Down => info!("Down"),
+//!                 serkey::KeyCode::Left => info!("Left"),
+//!                 serkey::KeyCode::Right => info!("Right"),
+//!                 serkey::KeyCode::Enter => info!("Enter"),
+//!                 serkey::KeyCode::Backspace => info!("Backspace"),
+//!                 _ => info!("Other keycode: {:?}", keycode),
+//!             }
+//!         }
+//!     }
+//! }
+//! ```
 #![no_std]
 use heapless::Vec;
 use heapless::spsc::Queue;
