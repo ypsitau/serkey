@@ -7,7 +7,7 @@
 
 pub enum VK {
     None,
-    Char(u32),
+    Char(char),
     LBUTTON,
     RBUTTON,
     CANCEL,
