@@ -3,7 +3,26 @@ use heapless::Vec;
 use heapless::spsc::Queue;
 pub mod vk;
 
-use vk::VK;
+pub enum KeyCode {
+    Backspace,
+    Enter,
+    Left,
+    Right,
+    Up,
+    Down,
+    Home,
+    End,
+    PageUp,
+    PageDown,
+    Tab,
+    BackTab,
+    Delete,
+    Insert,
+    F(u8),
+    Char(char),
+    Null,
+    Esc,
+}
 
 #[derive(Debug, PartialEq, Eq)]
 enum Stat {
@@ -26,7 +45,7 @@ enum Stat {
 }
 
 pub struct Parser {
-    queue: Queue<VK, 8>,
+    queue: Queue<KeyCode, 8>,
     stat: Stat,
     parameter_accum: u32,
     buf_intermediate: Vec::<u8, 32>,
@@ -45,10 +64,10 @@ impl Parser {
             utf8_remain: 0,
         }
     }
-    pub fn vk(&mut self) -> VK {
-        self.queue.dequeue().unwrap_or(VK::None)
+    pub fn keycode(&mut self) -> KeyCode {
+        self.queue.dequeue().unwrap_or(KeyCode::Null)
     }
-    fn gen_vk(&mut self, vk: VK) {
+    fn gen_keycode(&mut self, vk: KeyCode) {
         self.queue.enqueue(vk).ok();
     }
     pub fn feed(&mut self, byte: u8) {
@@ -59,29 +78,29 @@ impl Parser {
                 Stat::FirstByte => {
                     self.stat = match byte {
                         0x08 => {
-                            self.gen_vk(VK::BACK);
+                            self.gen_keycode(KeyCode::Backspace);
                             Stat::FirstByte
                         },
                         0x09 => {
-                            self.gen_vk(VK::TAB);
+                            self.gen_keycode(KeyCode::Tab);
                             Stat::FirstByte
                         },
                         0x0a => {
-                            self.gen_vk(VK::RETURN);
+                            self.gen_keycode(KeyCode::Enter);
                             Stat::AfterLF
                         },
                         0x0d => {
-                            self.gen_vk(VK::RETURN);
+                            self.gen_keycode(KeyCode::Enter);
                             Stat::AfterCR
                         },
                         0x1b => Stat::Escape,
                         0x7f => {
-                            self.gen_vk(VK::DELETE);
+                            self.gen_keycode(KeyCode::Delete);
                             Stat::FirstByte
                         },
                         byte => {
                             if byte & 0x80 == 0 {
-                                self.gen_vk(VK::Char(char::from(byte)));
+                                self.gen_keycode(KeyCode::Char(char::from(byte)));
                                 Stat::FirstByte
                             } else if byte & 0xe0 == 0xc0 {
                                 // Start of a 2-byte UTF-8 sequence
@@ -110,7 +129,7 @@ impl Parser {
                         self.utf8_remain -= 1;
                         if self.utf8_remain == 0 {
                             if let Some(ch) = char::from_u32(self.utf8_accum) {
-                                self.gen_vk(VK::Char(ch));
+                                self.gen_keycode(KeyCode::Char(ch));
                             }
                             Stat::FirstByte
                         } else {
@@ -142,7 +161,7 @@ impl Parser {
                 Stat::Escape => {
                     self.stat = match byte {
                         0x1b => {
-                            self.queue.enqueue(VK::ESCAPE).ok();
+                            self.queue.enqueue(KeyCode::Esc).ok();
                             Stat::FirstByte
                         },
                         b'N' => Stat::SS2,
@@ -200,15 +219,15 @@ impl Parser {
                 }
                 Stat::CsiFinal => {
                     match byte {
-                        b'A' => self.gen_vk(VK::UP),
-                        b'B' => self.gen_vk(VK::DOWN),
-                        b'C' => self.gen_vk(VK::RIGHT),
-                        b'D' => self.gen_vk(VK::LEFT),
+                        b'A' => self.gen_keycode(KeyCode::Up),
+                        b'B' => self.gen_keycode(KeyCode::Down),
+                        b'C' => self.gen_keycode(KeyCode::Right),
+                        b'D' => self.gen_keycode(KeyCode::Left),
                         b'~' => match self.parameter_accum {
-                            1 => self.gen_vk(VK::HOME),
-                            4 => self.gen_vk(VK::END),
-                            5 => self.gen_vk(VK::PRIOR),
-                            6 => self.gen_vk(VK::NEXT),
+                            1 => self.gen_keycode(KeyCode::Home),
+                            4 => self.gen_keycode(KeyCode::End),
+                            5 => self.gen_keycode(KeyCode::PageUp),
+                            6 => self.gen_keycode(KeyCode::PageDown),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
