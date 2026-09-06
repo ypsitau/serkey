@@ -261,6 +261,7 @@ impl Parser {
                         b'Z' => self.gen_keycode(KeyCode::BackTab),     // 0x5a
                         b'~' => match self.parameter_accum {            // 0x7e
                             1 => self.gen_keycode(KeyCode::Home),
+                            2 => self.gen_keycode(KeyCode::Insert),
                             4 => self.gen_keycode(KeyCode::End),
                             5 => self.gen_keycode(KeyCode::PageUp),
                             6 => self.gen_keycode(KeyCode::PageDown),
