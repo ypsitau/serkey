@@ -1,4 +1,4 @@
 fn main() {
-    let ctx = vtvk::Context::new();
+    let parser = vtvk::Parser::new();
     println!("Hello, world!");
 }

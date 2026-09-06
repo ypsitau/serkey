@@ -25,7 +25,7 @@ enum Stat {
     APC,
 }
 
-pub struct Context {
+pub struct Parser {
     queue: Queue<VK, 8>,
     stat: Stat,
     parameter_accum: u32,
@@ -34,9 +34,9 @@ pub struct Context {
     utf8_remain: u8,
 }
 
-impl Context {
+impl Parser {
     pub fn new() -> Self {
-        Context {
+        Parser {
             queue: Queue::new(),
             stat: Stat::FirstByte,
             parameter_accum: 0,
