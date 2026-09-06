@@ -67,13 +67,11 @@ async fn main(_spawner: Spawner) {
     let fut_usb = usb_device.run();
     let fut_echo = async {
         let (mut cdc_sender, mut cdc_receiver) = cdc_driver.split();
-        let mut first = true;
         let buf = {
             static STATIC_CELL: StaticCell<[u8; 64]> = StaticCell::new();
             STATIC_CELL.init([0u8; 64])
         };
-        let vtvk = vtvk::Context::new();
-        vtvk::vk::A;
+        let mut serkey_parser = serkey::Parser::new();
         loop {
             cdc_receiver.wait_connection().await;
             info!("Connected");
@@ -81,12 +79,13 @@ async fn main(_spawner: Spawner) {
                 let buf_read = match cdc_receiver.read_packet(buf).await {
                     Ok(n) => &buf[..n], Err(e) => break e,
                 };
-                if first {
-                    if let Err(e) = cdc_sender.write_packet(b"\r\nEcho via USB\r\n").await { break e; }
-                    first = false;
+                info!("Read packet: {:02x}", buf_read);
+                for &b in buf_read {
+                    serkey_parser.push(b);
+                    while let Some(keycode) = serkey_parser.next_keycode() {
+                        info!("Parsed: {:?}", keycode);
+                    }
                 }
-                //if let Err(e) = cdc_sender.write_packet(buf_read).await { break e; }
-                info!("Read packet: {:?}", buf_read);
             };
             if e != usb::driver::EndpointError::Disabled { break; }
         };
