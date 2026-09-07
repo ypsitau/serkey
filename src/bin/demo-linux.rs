@@ -20,7 +20,7 @@ fn main() -> std::io::Result<()> {
     println!("Ctrl-C to exit");
     loop {
         std::io::stdin().read_exact(&mut buf)?;
-        //writeln!(out, "Read byte: {:02x}", buf[0]).ok();
+        info!("Read byte: {:02x}", buf[0]);
         feed_parser(&mut parser, &buf);
         if buf[0] == 3 { break; }
     }
@@ -54,6 +54,17 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 serkey::KeyCode::Ctrl(n) => { info!("Ctrl: 0x{:02x}", n); }
                 serkey::KeyCode::Null => { info!("Null"); }
                 serkey::KeyCode::Esc => { info!("Esc"); }
+                serkey::KeyCode::ShiftLeft => { info!("ShiftLeft"); }
+                serkey::KeyCode::ShiftRight => { info!("ShiftRight"); }
+                serkey::KeyCode::ShiftUp => { info!("ShiftUp"); }
+                serkey::KeyCode::ShiftDown => { info!("ShiftDown"); }
+                serkey::KeyCode::ShiftHome => { info!("ShiftHome"); }
+                serkey::KeyCode::ShiftEnd => { info!("ShiftEnd"); }
+                serkey::KeyCode::ShiftPageUp => { info!("ShiftPageUp"); }
+                serkey::KeyCode::ShiftPageDown => { info!("ShiftPageDown"); }
+                serkey::KeyCode::ShiftDelete => { info!("ShiftDelete"); }
+                serkey::KeyCode::ShiftInsert => { info!("ShiftInsert"); }
+                serkey::KeyCode::ShiftF(n) => { info!("ShiftF{}", n); }
             }
         }
     }

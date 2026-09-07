@@ -39,7 +39,7 @@
 //!     }
 //! }
 //! ```
-#![no_std]
+//#![no_std]
 use heapless::Vec;
 use heapless::spsc::Queue;
 
@@ -65,6 +65,17 @@ pub enum KeyCode {
     Ctrl(u8),
     Null,
     Esc,
+    ShiftLeft,
+    ShiftRight,
+    ShiftUp,
+    ShiftDown,
+    ShiftHome,
+    ShiftEnd,
+    ShiftPageUp,
+    ShiftPageDown,
+    ShiftDelete,
+    ShiftInsert,
+    ShiftF(u8),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -77,6 +88,7 @@ enum Stat {
     SS2,
     SS3,
     DCS,
+    CsiParameterTop,
     CsiParameter,
     CsiIntermediate,
     CsiFinal,
@@ -90,7 +102,8 @@ enum Stat {
 pub struct Parser {
     queue: Queue<KeyCode, 8>,
     stat: Stat,
-    parameter_accum: u32,
+    param_accum: u16,
+    params: Vec::<u16, 4>,
     buf_intermediate: Vec::<u8, 32>,
     utf8_accum: u32,
     utf8_remain: u8,
@@ -101,7 +114,8 @@ impl Parser {
         Parser {
             queue: Queue::new(),
             stat: Stat::FirstByte,
-            parameter_accum: 0,
+            param_accum: 0,
+            params: Vec::new(),
             buf_intermediate: Vec::new(),
             utf8_accum: 0,
             utf8_remain: 0,
@@ -215,8 +229,10 @@ impl Parser {
                         b'P' => Stat::DCS,                          // 0x50
                         b'X' => Stat::SOS,                          // 0x58
                         b'[' => {                                   // 0x5b
-                            self.parameter_accum = 0;
-                            Stat::CsiParameter
+                            self.param_accum = 0;
+                            self.params.clear();
+                            self.buf_intermediate.clear();
+                            Stat::CsiParameterTop
                         },
                         b'\\' => Stat::ST,                          // 0x5c
                         b']' => Stat::OSC,                          // 0x5d
@@ -245,15 +261,32 @@ impl Parser {
                 Stat::SOS => {
                     self.stat = Stat::FirstByte;
                 }
+                Stat::CsiParameterTop => {
+                    self.stat = match byte {
+                        b'0'..=b'9' => {
+                            cont_flag = true;
+                            Stat::CsiParameter
+                        }
+                        _ => {
+                            cont_flag = true;
+                            Stat::CsiIntermediate
+                        }
+                    };
+                }
                 Stat::CsiParameter => {
                     self.stat = match byte {
                         b'0'..=b'9' => {
                             // ignore the overflow
-                            self.parameter_accum = self.parameter_accum * 10 + (byte - b'0') as u32;
+                            self.param_accum = self.param_accum * 10 + (byte - b'0') as u16;
+                            Stat::CsiParameter
+                        }
+                        b';' => {
+                            self.params.push(self.param_accum).ok();
+                            self.param_accum = 0;
                             Stat::CsiParameter
                         }
                         _ => {
-                            self.buf_intermediate.clear();
+                            self.params.push(self.param_accum).ok();
                             cont_flag = true;
                             Stat::CsiIntermediate
                         }
@@ -272,29 +305,81 @@ impl Parser {
                     };
                 }
                 Stat::CsiFinal => {
+                    let params = self.params.as_slice();
+                    println!("CSI params: {:?}", params);
                     match byte {
-                        b'A' => self.gen_keycode(KeyCode::Up),          // 0x41
-                        b'B' => self.gen_keycode(KeyCode::Down),        // 0x42
-                        b'C' => self.gen_keycode(KeyCode::Right),       // 0x43
-                        b'D' => self.gen_keycode(KeyCode::Left),        // 0x44
-                        b'F' => self.gen_keycode(KeyCode::End),         // 0x46
-                        b'H' => self.gen_keycode(KeyCode::Home),        // 0x48
-                        b'Z' => self.gen_keycode(KeyCode::BackTab),     // 0x5a
-                        b'~' => match self.parameter_accum {            // 0x7e
-                            1 => self.gen_keycode(KeyCode::Home),
-                            2 => self.gen_keycode(KeyCode::Insert),
-                            3 => self.gen_keycode(KeyCode::Delete),
-                            4 => self.gen_keycode(KeyCode::End),
-                            5 => self.gen_keycode(KeyCode::PageUp),
-                            6 => self.gen_keycode(KeyCode::PageDown),
-                            15 => self.gen_keycode(KeyCode::F(5)),
-                            17 => self.gen_keycode(KeyCode::F(6)),
-                            18 => self.gen_keycode(KeyCode::F(7)),
-                            19 => self.gen_keycode(KeyCode::F(8)),
-                            20 => self.gen_keycode(KeyCode::F(9)),
-                            21 => self.gen_keycode(KeyCode::F(10)),
-                            23 => self.gen_keycode(KeyCode::F(11)),
-                            24 => self.gen_keycode(KeyCode::F(12)),
+                        b'A' => match params {                          // 0x41
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftUp),
+                            _ => self.gen_keycode(KeyCode::Up),
+                        }
+                        b'B' => match params {                          // 0x42
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftDown),
+                            _ => self.gen_keycode(KeyCode::Down),
+                        }
+                        b'C' => match params {                          // 0x43
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftRight),
+                            _ => self.gen_keycode(KeyCode::Right),
+                        }
+                        b'D' => match params {                          // 0x44
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftLeft),
+                            _ => self.gen_keycode(KeyCode::Left),
+                        }
+                        b'F' => match params {                          // 0x46
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftEnd),
+                            _ => self.gen_keycode(KeyCode::End),
+                        }
+                        b'H' => match params {                          // 0x48
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftHome),
+                            _ => self.gen_keycode(KeyCode::Home),
+                        }
+                        b'P' => match params {                          // 0x50
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftF(1)),
+                            _ => self.gen_keycode(KeyCode::F(1)),
+                        }
+                        b'Q' => match params {                          // 0x51
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftF(2)),
+                            _ => self.gen_keycode(KeyCode::F(2)),
+                        }
+                        b'R' => match params {                          // 0x52
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftF(3)),
+                            _ => self.gen_keycode(KeyCode::F(3)),
+                        }
+                        b'S' => match params {                          // 0x53
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftF(4)),
+                            _ => self.gen_keycode(KeyCode::F(4)),
+                        }
+                        b'Z' => match params {                          // 0x5a
+                            _ => self.gen_keycode(KeyCode::BackTab),
+                        }
+                        b'~' => match params {                          // 0x7e
+                            &[1] => self.gen_keycode(KeyCode::Home),
+                            &[2] => self.gen_keycode(KeyCode::Insert),
+                            &[3] => self.gen_keycode(KeyCode::Delete),
+                            &[4] => self.gen_keycode(KeyCode::End),
+                            &[5] => self.gen_keycode(KeyCode::PageUp),
+                            &[6] => self.gen_keycode(KeyCode::PageDown),
+                            &[15] => self.gen_keycode(KeyCode::F(5)),
+                            &[17] => self.gen_keycode(KeyCode::F(6)),
+                            &[18] => self.gen_keycode(KeyCode::F(7)),
+                            &[19] => self.gen_keycode(KeyCode::F(8)),
+                            &[20] => self.gen_keycode(KeyCode::F(9)),
+                            &[21] => self.gen_keycode(KeyCode::F(10)),
+                            &[23] => self.gen_keycode(KeyCode::F(11)),
+                            &[24] => self.gen_keycode(KeyCode::F(12)),
+                            &[1, 2] => self.gen_keycode(KeyCode::ShiftHome),
+                            &[2, 2] => self.gen_keycode(KeyCode::ShiftInsert),
+                            &[3, 2] => self.gen_keycode(KeyCode::ShiftDelete),
+                            &[4, 2] => self.gen_keycode(KeyCode::ShiftEnd),
+                            &[5, 2] => self.gen_keycode(KeyCode::ShiftPageUp),
+                            &[6, 2] => self.gen_keycode(KeyCode::ShiftPageDown),
+                            &[15, 2] => self.gen_keycode(KeyCode::ShiftF(5)),
+                            &[17, 2] => self.gen_keycode(KeyCode::ShiftF(6)),
+                            &[18, 2] => self.gen_keycode(KeyCode::ShiftF(7)),
+                            &[19, 2] => self.gen_keycode(KeyCode::ShiftF(8)),
+                            &[20, 2] => self.gen_keycode(KeyCode::ShiftF(9)),
+                            &[21, 2] => self.gen_keycode(KeyCode::ShiftF(10)),
+                            &[23, 2] => self.gen_keycode(KeyCode::ShiftF(11)),
+                            &[24, 2] => self.gen_keycode(KeyCode::ShiftF(12)),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
