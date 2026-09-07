@@ -264,7 +264,7 @@ async fn main(_spawner: Spawner) {
                 let buf_read = match cdc_receiver.read_packet(buf).await {
                     Ok(n) => &buf[..n], Err(e) => break e,
                 };
-                info!("Read packet: {:02x}", buf_read);
+                //info!("Read packet: {:02x}", buf_read);
                 feed_parser(&mut serkey_parser, buf_read);
                 //for &byte in buf_read {
                 //    serkey_parser.push(byte);
