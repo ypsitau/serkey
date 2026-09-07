@@ -1,66 +1,42 @@
-//! A simple keycode parser for handling UTF-8 and control sequences.
-//! This crate provides a parser for interpreting keycodes from byte streams, including UTF-8 characters and control sequences.
+//! A simple keycode parser for handling UTF-8 and VT100 terminal control sequences.
+//!
 //! # Example
 //! 
-//! Add this crate as a dependency and use the `Parser` struct to parse keycodes from a byte stream.
-//! 
+//! Create a new parser instance using `serkey::Parser::new()`.
+//!
 //! ```rust
-//! use std::io::{Read as _, Write as _};
-//! use std::os::unix::io::AsRawFd as _;
-//! 
-//! fn main() -> std::io::Result<()> {
-//!     let fd_stdin = std::io::stdin().as_raw_fd();
-//!     let termios_org = unsafe {
-//!         let mut termios: libc::termios = std::mem::zeroed();
-//!         libc::tcgetattr(fd_stdin, &mut termios);
-//!         termios
-//!     };
-//!     let mut termios_raw = termios_org;
-//!     unsafe {
-//!         libc::cfmakeraw(&mut termios_raw);
-//!         termios_raw.c_oflag = termios_org.c_oflag;
-//!         libc::tcsetattr(fd_stdin, libc::TCSANOW, &termios_raw);
-//!     }
-//!     let mut parser = serkey::Parser::new();
-//!     let mut buf = [0u8; 1];
-//!     let mut out = std::io::stderr();
-//!     writeln!(out, "Ctrl-C to exit").ok();
-//!     loop {
-//!         std::io::stdin().read_exact(&mut buf)?;
-//!         //writeln!(out, "Read byte: {:02x}", buf[0]).ok();
-//!         for byte in buf {
-//!             parser.push(byte);
-//!             while let Some(keycode) = parser.next_keycode() {
-//!                 write!(out, "Keycode: ").ok();
-//!                 match keycode {
-//!                     serkey::KeyCode::Backspace => { writeln!(out, "Backspace").ok(); }
-//!                     serkey::KeyCode::Enter => { writeln!(out, "Enter").ok(); }
-//!                     serkey::KeyCode::Left => { writeln!(out, "Left").ok(); }
-//!                     serkey::KeyCode::Right => { writeln!(out, "Right").ok(); }
-//!                     serkey::KeyCode::Up => { writeln!(out, "Up").ok(); }
-//!                     serkey::KeyCode::Down => { writeln!(out, "Down").ok(); }
-//!                     serkey::KeyCode::Home => { writeln!(out, "Home").ok(); }
-//!                     serkey::KeyCode::End => { writeln!(out, "End").ok(); }
-//!                     serkey::KeyCode::PageUp => { writeln!(out, "PageUp").ok(); }
-//!                     serkey::KeyCode::PageDown => { writeln!(out, "PageDown").ok(); }
-//!                     serkey::KeyCode::Tab => { writeln!(out, "Tab").ok(); }
-//!                     serkey::KeyCode::BackTab => { writeln!(out, "BackTab").ok(); }
-//!                     serkey::KeyCode::Delete => { writeln!(out, "Delete").ok(); }
-//!                     serkey::KeyCode::Insert => { writeln!(out, "Insert").ok(); }
-//!                     serkey::KeyCode::F(n) => { writeln!(out, "F{}", n).ok(); }
-//!                     serkey::KeyCode::Char(ch) => { writeln!(out, "Char: {}", ch).ok(); }
-//!                     serkey::KeyCode::Ctrl(n) => { writeln!(out, "Ctrl: 0x{:02x}", n).ok(); }
-//!                     serkey::KeyCode::Null => { writeln!(out, "Null").ok(); }
-//!                     serkey::KeyCode::Esc => { writeln!(out, "Esc").ok(); }
-//!                 }
+//! let mut parser = serkey::Parser::new();
+//! ```
+//! Call `serkey::Parser::push()` to feed bytes into the parser and `serkey::Parser::next_keycode()` to retrieve parsed keycodes.
+//!
+//! ```rust
+//! fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
+//!     for &byte in buf {
+//!         parser.push(byte);
+//!         while let Some(keycode) = parser.next_keycode() {
+//!             match keycode {
+//!                 serkey::KeyCode::Backspace => { info!("Backspace"); }
+//!                 serkey::KeyCode::Enter => { info!("Enter"); }
+//!                 serkey::KeyCode::Left => { info!("Left"); }
+//!                 serkey::KeyCode::Right => { info!("Right"); }
+//!                 serkey::KeyCode::Up => { info!("Up"); }
+//!                 serkey::KeyCode::Down => { info!("Down"); }
+//!                 serkey::KeyCode::Home => { info!("Home"); }
+//!                 serkey::KeyCode::End => { info!("End"); }
+//!                 serkey::KeyCode::PageUp => { info!("PageUp"); }
+//!                 serkey::KeyCode::PageDown => { info!("PageDown"); }
+//!                 serkey::KeyCode::Tab => { info!("Tab"); }
+//!                 serkey::KeyCode::BackTab => { info!("BackTab"); }
+//!                 serkey::KeyCode::Delete => { info!("Delete"); }
+//!                 serkey::KeyCode::Insert => { info!("Insert"); }
+//!                 serkey::KeyCode::F(n) => { info!("F{}", n); }
+//!                 serkey::KeyCode::Char(ch) => { info!("Char: {}", ch); }
+//!                 serkey::KeyCode::Ctrl(n) => { info!("Ctrl: 0x{:02x}", n); }
+//!                 serkey::KeyCode::Null => { info!("Null"); }
+//!                 serkey::KeyCode::Esc => { info!("Esc"); }
 //!             }
 //!         }
-//!         if buf[0] == 3 { break; }
 //!     }
-//!     unsafe {
-//!         libc::tcsetattr(fd_stdin, libc::TCSANOW, &termios_org);
-//!     }
-//!     Ok(())
 //! }
 //! ```
 #![no_std]
