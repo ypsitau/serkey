@@ -290,7 +290,7 @@ async fn main(_spawner: Spawner) {
 }
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
-    for byte in buf {
+    for &byte in buf {
         parser.push(byte);
         while let Some(keycode) = parser.next_keycode() {
             match keycode {
