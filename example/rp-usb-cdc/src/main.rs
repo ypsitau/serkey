@@ -265,12 +265,13 @@ async fn main(_spawner: Spawner) {
                     Ok(n) => &buf[..n], Err(e) => break e,
                 };
                 info!("Read packet: {:02x}", buf_read);
-                for &byte in buf_read {
-                    serkey_parser.push(byte);
-                    while let Some(keycode) = serkey_parser.next_keycode() {
-                        line_editor.handle_keycode(&mut terminal, keycode).await;
-                    }
-                }
+                feed_parser(&mut serkey_parser, buf_read);
+                //for &byte in buf_read {
+                //    serkey_parser.push(byte);
+                //    while let Some(keycode) = serkey_parser.next_keycode() {
+                //        line_editor.handle_keycode(&mut terminal, keycode).await;
+                //    }
+                //}
             };
             if e != usb::driver::EndpointError::Disabled { break; }
         };
@@ -286,4 +287,33 @@ async fn main(_spawner: Spawner) {
     };
     info!("Starting main loop");
     embassy_futures::join::join3(fut_usb, fut_echo, fut_gpio).await;
+}
+
+fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
+    for &byte in buf {
+        parser.push(byte);
+        while let Some(keycode) = parser.next_keycode() {
+            match keycode {
+                serkey::KeyCode::Backspace => { info!("Backspace"); }
+                serkey::KeyCode::Enter => { info!("Enter"); }
+                serkey::KeyCode::Left => { info!("Left"); }
+                serkey::KeyCode::Right => { info!("Right"); }
+                serkey::KeyCode::Up => { info!("Up"); }
+                serkey::KeyCode::Down => { info!("Down"); }
+                serkey::KeyCode::Home => { info!("Home"); }
+                serkey::KeyCode::End => { info!("End"); }
+                serkey::KeyCode::PageUp => { info!("PageUp"); }
+                serkey::KeyCode::PageDown => { info!("PageDown"); }
+                serkey::KeyCode::Tab => { info!("Tab"); }
+                serkey::KeyCode::BackTab => { info!("BackTab"); }
+                serkey::KeyCode::Delete => { info!("Delete"); }
+                serkey::KeyCode::Insert => { info!("Insert"); }
+                serkey::KeyCode::F(n) => { info!("F{}", n); }
+                serkey::KeyCode::Char(ch) => { info!("Char: {}", ch); }
+                serkey::KeyCode::Ctrl(n) => { info!("Ctrl: 0x{:02x}", n); }
+                serkey::KeyCode::Null => { info!("Null"); }
+                serkey::KeyCode::Esc => { info!("Esc"); }
+            }
+        }
+    }
 }

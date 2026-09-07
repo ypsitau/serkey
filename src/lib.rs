@@ -5,23 +5,62 @@
 //! Add this crate as a dependency and use the `Parser` struct to parse keycodes from a byte stream.
 //! 
 //! ```rust
-//! fn test_parser(buf: &[u8]) {
+//! use std::io::{Read as _, Write as _};
+//! use std::os::unix::io::AsRawFd as _;
+//! 
+//! fn main() -> std::io::Result<()> {
+//!     let fd_stdin = std::io::stdin().as_raw_fd();
+//!     let termios_org = unsafe {
+//!         let mut termios: libc::termios = std::mem::zeroed();
+//!         libc::tcgetattr(fd_stdin, &mut termios);
+//!         termios
+//!     };
+//!     let mut termios_raw = termios_org;
+//!     unsafe {
+//!         libc::cfmakeraw(&mut termios_raw);
+//!         termios_raw.c_oflag = termios_org.c_oflag;
+//!         libc::tcsetattr(fd_stdin, libc::TCSANOW, &termios_raw);
+//!     }
 //!     let mut parser = serkey::Parser::new();
-//!     for &byte in buf {
-//!         parser.push(byte);
-//!         while let Some(keycode) = parser.next_keycode() {
-//!             match keycode {
-//!                 serkey::KeyCode::Char(ch) => info!("Char: {}", ch),
-//!                 serkey::KeyCode::Up => info!("Up"),
-//!                 serkey::KeyCode::Down => info!("Down"),
-//!                 serkey::KeyCode::Left => info!("Left"),
-//!                 serkey::KeyCode::Right => info!("Right"),
-//!                 serkey::KeyCode::Enter => info!("Enter"),
-//!                 serkey::KeyCode::Backspace => info!("Backspace"),
-//!                 _ => info!("Other keycode: {:?}", keycode),
+//!     let mut buf = [0u8; 1];
+//!     let mut out = std::io::stderr();
+//!     writeln!(out, "Ctrl-C to exit").ok();
+//!     loop {
+//!         std::io::stdin().read_exact(&mut buf)?;
+//!         //writeln!(out, "Read byte: {:02x}", buf[0]).ok();
+//!         for byte in buf {
+//!             parser.push(byte);
+//!             while let Some(keycode) = parser.next_keycode() {
+//!                 write!(out, "Keycode: ").ok();
+//!                 match keycode {
+//!                     serkey::KeyCode::Backspace => { writeln!(out, "Backspace").ok(); }
+//!                     serkey::KeyCode::Enter => { writeln!(out, "Enter").ok(); }
+//!                     serkey::KeyCode::Left => { writeln!(out, "Left").ok(); }
+//!                     serkey::KeyCode::Right => { writeln!(out, "Right").ok(); }
+//!                     serkey::KeyCode::Up => { writeln!(out, "Up").ok(); }
+//!                     serkey::KeyCode::Down => { writeln!(out, "Down").ok(); }
+//!                     serkey::KeyCode::Home => { writeln!(out, "Home").ok(); }
+//!                     serkey::KeyCode::End => { writeln!(out, "End").ok(); }
+//!                     serkey::KeyCode::PageUp => { writeln!(out, "PageUp").ok(); }
+//!                     serkey::KeyCode::PageDown => { writeln!(out, "PageDown").ok(); }
+//!                     serkey::KeyCode::Tab => { writeln!(out, "Tab").ok(); }
+//!                     serkey::KeyCode::BackTab => { writeln!(out, "BackTab").ok(); }
+//!                     serkey::KeyCode::Delete => { writeln!(out, "Delete").ok(); }
+//!                     serkey::KeyCode::Insert => { writeln!(out, "Insert").ok(); }
+//!                     serkey::KeyCode::F(n) => { writeln!(out, "F{}", n).ok(); }
+//!                     serkey::KeyCode::Char(ch) => { writeln!(out, "Char: {}", ch).ok(); }
+//!                     serkey::KeyCode::Ctrl(n) => { writeln!(out, "Ctrl: 0x{:02x}", n).ok(); }
+//!                     serkey::KeyCode::Null => { writeln!(out, "Null").ok(); }
+//!                     serkey::KeyCode::Esc => { writeln!(out, "Esc").ok(); }
+//!                 }
 //!             }
 //!         }
+//!         if buf[0] == 3 { break; }
 //!     }
+//!     unsafe {
+//!         libc::tcsetattr(fd_stdin, libc::TCSANOW, &termios_org);
+//!     }
+//!     Ok(())
 //! }
 //! ```
 #![no_std]
@@ -47,6 +86,7 @@ pub enum KeyCode {
     Insert,
     F(u8),
     Char(char),
+    Ctrl(u8),
     Null,
     Esc,
 }
@@ -126,7 +166,10 @@ impl Parser {
                             Stat::FirstByte
                         },
                         byte => {
-                            if byte & 0x80 == 0 {
+                            if byte < 0x20 {
+                                self.gen_keycode(KeyCode::Ctrl(byte));
+                                Stat::FirstByte
+                            } else if byte < 0x80 {
                                 self.gen_keycode(KeyCode::Char(char::from(byte)));
                                 Stat::FirstByte
                             } else if byte & 0xe0 == 0xc0 {
@@ -258,10 +301,13 @@ impl Parser {
                         b'B' => self.gen_keycode(KeyCode::Down),        // 0x42
                         b'C' => self.gen_keycode(KeyCode::Right),       // 0x43
                         b'D' => self.gen_keycode(KeyCode::Left),        // 0x44
+                        b'F' => self.gen_keycode(KeyCode::End),         // 0x46
+                        b'H' => self.gen_keycode(KeyCode::Home),        // 0x48
                         b'Z' => self.gen_keycode(KeyCode::BackTab),     // 0x5a
                         b'~' => match self.parameter_accum {            // 0x7e
                             1 => self.gen_keycode(KeyCode::Home),
                             2 => self.gen_keycode(KeyCode::Insert),
+                            3 => self.gen_keycode(KeyCode::Delete),
                             4 => self.gen_keycode(KeyCode::End),
                             5 => self.gen_keycode(KeyCode::PageUp),
                             6 => self.gen_keycode(KeyCode::PageDown),
