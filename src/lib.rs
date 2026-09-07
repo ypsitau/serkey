@@ -39,7 +39,7 @@
 //!     }
 //! }
 //! ```
-//#![no_std]
+#![no_std]
 use heapless::Vec;
 use heapless::spsc::Queue;
 
@@ -306,7 +306,6 @@ impl Parser {
                 }
                 Stat::CsiFinal => {
                     let params = self.params.as_slice();
-                    println!("CSI params: {:?}", params);
                     match byte {
                         b'A' => match params {                          // 0x41
                             &[1, 2] => self.gen_keycode(KeyCode::ShiftUp),
