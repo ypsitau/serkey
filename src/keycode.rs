@@ -14,6 +14,15 @@ impl Attr {
     pub fn new() -> Self {
         Self { modifier: 0 }
     }
+    pub fn shift(self) -> Self {
+        self.shift_l()
+    }
+    pub fn control(self) -> Self {
+        self.control_l()
+    }
+    pub fn alt(self) -> Self {
+        self.alt_l()
+    }
     pub fn shift_r(self) -> Self {
         Self { modifier: self.modifier | ATTR_SHIFT_R, }
     }
@@ -40,7 +49,7 @@ pub struct AttrWithId<const ID: u8> {
 }
 
 impl<const ID: u8> AttrWithId<ID> {
-    fn id(&self) -> u8 { ID }
+    pub fn id(&self) -> u8 { ID }
     pub fn is_shift(&self) -> bool {
         self.modifier & (ATTR_SHIFT_L | ATTR_SHIFT_R) != 0
     }
@@ -70,15 +79,27 @@ impl<const ID: u8> AttrWithId<ID> {
     }
 }
 
-impl<const ID: u8> Into<AttrWithId<ID>> for Attr {
-    fn into(self) -> AttrWithId<ID> {
-        AttrWithId { modifier: self.modifier }
+impl<const ID: u8> From<Attr> for AttrWithId<ID> {
+    fn from(value: Attr) -> Self {
+        Self { modifier: value.modifier }
     }
 }
 
-#[derive(Debug)]
+#[cfg(test)]
+mod tests {
+    use super::{Attr, AttrWithId};
+
+    #[test]
+    fn attr_into_attr_with_id() {
+        let value: AttrWithId<42> = Attr::new().into();
+        assert_eq!(value.id(), 42);
+    }
+}
+
 #[repr(u8)]
-pub enum KeyCode {
+#[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum Vk {
     CookedChar(char),
     CookedCtrl(u8),
     A(AttrWithId<65>),

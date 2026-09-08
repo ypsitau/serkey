@@ -31,40 +31,43 @@ fn main() -> std::io::Result<()> {
 }
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
+    let print_key = |text: &str, is_shift: bool| {
+        info!("{}{}", text, if is_shift { " + Shift" } else { "" });
+    };
     for &byte in buf {
         parser.push(byte);
         while let Some(keycode) = parser.next_keycode() {
             match keycode {
-                serkey::KeyCode::CookedChar(ch) => { info!("CookedChar: {}", ch); }
-                serkey::KeyCode::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
-                serkey::KeyCode::Backspace => { info!("Backspace"); }
-                serkey::KeyCode::Enter => { info!("Enter"); }
-                serkey::KeyCode::Left => { info!("Left"); }
-                serkey::KeyCode::Right => { info!("Right"); }
-                serkey::KeyCode::Up => { info!("Up"); }
-                serkey::KeyCode::Down => { info!("Down"); }
-                serkey::KeyCode::Home => { info!("Home"); }
-                serkey::KeyCode::End => { info!("End"); }
-                serkey::KeyCode::PageUp => { info!("PageUp"); }
-                serkey::KeyCode::PageDown => { info!("PageDown"); }
-                serkey::KeyCode::Tab => { info!("Tab"); }
-                serkey::KeyCode::BackTab => { info!("BackTab"); }
-                serkey::KeyCode::Delete => { info!("Delete"); }
-                serkey::KeyCode::Insert => { info!("Insert"); }
-                serkey::KeyCode::F(n) => { info!("F{}", n); }
-                serkey::KeyCode::Null => { info!("Null"); }
-                serkey::KeyCode::Esc => { info!("Esc"); }
-                serkey::KeyCode::ShiftLeft => { info!("ShiftLeft"); }
-                serkey::KeyCode::ShiftRight => { info!("ShiftRight"); }
-                serkey::KeyCode::ShiftUp => { info!("ShiftUp"); }
-                serkey::KeyCode::ShiftDown => { info!("ShiftDown"); }
-                serkey::KeyCode::ShiftHome => { info!("ShiftHome"); }
-                serkey::KeyCode::ShiftEnd => { info!("ShiftEnd"); }
-                serkey::KeyCode::ShiftPageUp => { info!("ShiftPageUp"); }
-                serkey::KeyCode::ShiftPageDown => { info!("ShiftPageDown"); }
-                serkey::KeyCode::ShiftDelete => { info!("ShiftDelete"); }
-                serkey::KeyCode::ShiftInsert => { info!("ShiftInsert"); }
-                serkey::KeyCode::ShiftF(n) => { info!("ShiftF{}", n); }
+                serkey::Vk::CookedChar(ch) => { info!("CookedChar: {}", ch); }
+                serkey::Vk::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
+                serkey::Vk::Back(attr) => { print_key("Back", attr.is_shift()); }
+                serkey::Vk::Return(attr) => { print_key("Return", attr.is_shift()); }
+                serkey::Vk::Left(attr) => { print_key("Left", attr.is_shift()); }
+                serkey::Vk::Right(attr) => { print_key("Right", attr.is_shift()); }
+                serkey::Vk::Up(attr) => { print_key("Up", attr.is_shift()); }
+                serkey::Vk::Down(attr) => { print_key("Down", attr.is_shift()); }
+                serkey::Vk::Home(attr) => { print_key("Home", attr.is_shift()); }
+                serkey::Vk::End(attr) => { print_key("End", attr.is_shift()); }
+                serkey::Vk::Prior(attr) => { print_key("Prior", attr.is_shift()); }
+                serkey::Vk::Next(attr) => { print_key("Next", attr.is_shift()); }
+                serkey::Vk::Tab(attr) => { print_key("Tab", attr.is_shift()); }
+                serkey::Vk::OemBacktab(attr) => { print_key("OemBacktab", attr.is_shift()); }
+                serkey::Vk::Delete(attr) => { print_key("Delete", attr.is_shift()); }
+                serkey::Vk::Insert(attr) => { print_key("Insert", attr.is_shift()); }
+                serkey::Vk::Escape(attr) => { print_key("Esc", attr.is_shift()); }
+                serkey::Vk::F1(attr) => { print_key("F1", attr.is_shift()); }
+                serkey::Vk::F2(attr) => { print_key("F2", attr.is_shift()); }
+                serkey::Vk::F3(attr) => { print_key("F3", attr.is_shift()); }
+                serkey::Vk::F4(attr) => { print_key("F4", attr.is_shift()); }
+                serkey::Vk::F5(attr) => { print_key("F5", attr.is_shift()); }
+                serkey::Vk::F6(attr) => { print_key("F6", attr.is_shift()); }
+                serkey::Vk::F7(attr) => { print_key("F7", attr.is_shift()); }
+                serkey::Vk::F8(attr) => { print_key("F8", attr.is_shift()); }
+                serkey::Vk::F9(attr) => { print_key("F9", attr.is_shift()); }
+                serkey::Vk::F10(attr) => { print_key("F10", attr.is_shift()); }
+                serkey::Vk::F11(attr) => { print_key("F11", attr.is_shift()); }
+                serkey::Vk::F12(attr) => { print_key("F12", attr.is_shift()); }
+                _ => {}
             }
         }
     }
