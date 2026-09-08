@@ -20,7 +20,7 @@ fn main() -> std::io::Result<()> {
     println!("Ctrl-C to exit");
     loop {
         std::io::stdin().read_exact(&mut buf)?;
-        //info!("Read byte: {:02x}", buf[0]);
+        info!("Read byte: {:02x}", buf[0]);
         feed_parser(&mut parser, &buf);
         if buf[0] == 3 { break; }
     }
