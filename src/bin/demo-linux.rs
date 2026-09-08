@@ -31,8 +31,8 @@ fn main() -> std::io::Result<()> {
 }
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
-    use serkey::Vk;
-    let print_key = |text: &str, modifier: serkey::Modifier| {
+    use serkey::{Vk, Modifier};
+    let print_key = |text: &str, modifier: Modifier| {
         info!("{}{}{}{}", text,
             if modifier.is_shift() { " + Shift" } else { "" },
             if modifier.is_control() { " + Control" } else { "" },
