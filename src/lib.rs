@@ -55,7 +55,7 @@
 mod keycode;
 use heapless::Vec;
 use heapless::spsc::Queue;
-pub use keycode::{Vk, Attr};
+pub use keycode::{Vk, Modifier};
 
 #[derive(Debug, PartialEq, Eq)]
 enum Stat {
@@ -112,26 +112,27 @@ impl Parser {
             cont_flag = false;
             match self.stat {
                 Stat::FirstByte => {
+                    let attr = Modifier::default();
                     self.stat = match byte {
                         0x08 => {
-                            self.gen_keycode(Vk::Back(Attr::new().into()));
+                            self.gen_keycode(Vk::Back(attr.into()));
                             Stat::FirstByte
                         },
                         0x09 => {
-                            self.gen_keycode(Vk::Tab(Attr::new().into()));
+                            self.gen_keycode(Vk::Tab(attr.into()));
                             Stat::FirstByte
                         },
                         0x0a => {
-                            self.gen_keycode(Vk::Return(Attr::new().into()));
+                            self.gen_keycode(Vk::Return(attr.into()));
                             Stat::AfterLF
                         },
                         0x0d => {
-                            self.gen_keycode(Vk::Return(Attr::new().into()));
+                            self.gen_keycode(Vk::Return(attr.into()));
                             Stat::AfterCR
                         },
                         0x1b => Stat::Escape,
                         0x7f => {
-                            self.gen_keycode(Vk::Delete(Attr::new().into()));
+                            self.gen_keycode(Vk::Delete(attr.into()));
                             Stat::FirstByte
                         },
                         byte => {
@@ -198,9 +199,10 @@ impl Parser {
                     };
                 }
                 Stat::Escape => {
+                    let attr = Modifier::default();
                     self.stat = match byte {
                         0x1b => {
-                            self.gen_keycode(Vk::Escape(Attr::new().into()));
+                            self.gen_keycode(Vk::Escape(attr.into()));
                             Stat::FirstByte
                         },
                         b'N' => Stat::SS2,                          // 0x4e
@@ -224,12 +226,13 @@ impl Parser {
                     self.stat = Stat::FirstByte;
                 }
                 Stat::SS3 => {
+                    let attr = Modifier::default();
                     match byte {
-                        b'P' => self.gen_keycode(Vk::F1(Attr::new().into())),    // 0x50
-                        b'Q' => self.gen_keycode(Vk::F2(Attr::new().into())),    // 0x51
-                        b'R' => self.gen_keycode(Vk::F3(Attr::new().into())),    // 0x52
-                        b'S' => self.gen_keycode(Vk::F4(Attr::new().into())),    // 0x53
-                        b'T' => self.gen_keycode(Vk::F5(Attr::new().into())),    // 0x54
+                        b'P' => self.gen_keycode(Vk::F1(attr.into())),    // 0x50
+                        b'Q' => self.gen_keycode(Vk::F2(attr.into())),    // 0x51
+                        b'R' => self.gen_keycode(Vk::F3(attr.into())),    // 0x52
+                        b'S' => self.gen_keycode(Vk::F4(attr.into())),    // 0x53
+                        b'T' => self.gen_keycode(Vk::F5(attr.into())),    // 0x54
                         _ => (),
                     }
                     self.stat = Stat::FirstByte;
@@ -284,80 +287,81 @@ impl Parser {
                     };
                 }
                 Stat::CsiFinal => {
+                    let attr = Modifier::default();
                     let params = self.params.as_slice();
                     match byte {
                         b'A' => match params {                          // 0x41
-                            &[1, 2] => self.gen_keycode(Vk::Up(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::Up(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::Up(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::Up(attr.into())),
                         }
                         b'B' => match params {                          // 0x42
-                            &[1, 2] => self.gen_keycode(Vk::Down(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::Down(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::Down(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::Down(attr.into())),
                         }
                         b'C' => match params {                          // 0x43
-                            &[1, 2] => self.gen_keycode(Vk::Right(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::Right(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::Right(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::Right(attr.into())),
                         }
                         b'D' => match params {                          // 0x44
-                            &[1, 2] => self.gen_keycode(Vk::Left(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::Left(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::Left(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::Left(attr.into())),
                         }
                         b'F' => match params {                          // 0x46
-                            &[1, 2] => self.gen_keycode(Vk::End(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::End(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::End(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::End(attr.into())),
                         }
                         b'H' => match params {                          // 0x48
-                            &[1, 2] => self.gen_keycode(Vk::Home(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::Home(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::Home(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::Home(attr.into())),
                         }
                         b'P' => match params {                          // 0x50
-                            &[1, 2] => self.gen_keycode(Vk::F1(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::F1(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::F1(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::F1(attr.into())),
                         }
                         b'Q' => match params {                          // 0x51
-                            &[1, 2] => self.gen_keycode(Vk::F2(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::F2(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::F2(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::F2(attr.into())),
                         }
                         b'R' => match params {                          // 0x52
-                            &[1, 2] => self.gen_keycode(Vk::F3(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::F3(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::F3(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::F3(attr.into())),
                         }
                         b'S' => match params {                          // 0x53
-                            &[1, 2] => self.gen_keycode(Vk::F4(Attr::new().shift().into())),
-                            _ => self.gen_keycode(Vk::F4(Attr::new().into())),
+                            &[1, 2] => self.gen_keycode(Vk::F4(attr.shift().into())),
+                            _ => self.gen_keycode(Vk::F4(attr.into())),
                         }
                         b'Z' => match params {                          // 0x5a
-                            _ => self.gen_keycode(Vk::OemBacktab(Attr::new().into())),
+                            _ => self.gen_keycode(Vk::OemBacktab(attr.into())),
                         }
                         b'~' => match params {                          // 0x7e
-                            &[1] => self.gen_keycode(Vk::Home(Attr::new().into())),
-                            &[2] => self.gen_keycode(Vk::Insert(Attr::new().into())),
-                            &[3] => self.gen_keycode(Vk::Delete(Attr::new().into())),
-                            &[4] => self.gen_keycode(Vk::End(Attr::new().into())),
-                            &[5] => self.gen_keycode(Vk::Prior(Attr::new().into())),
-                            &[6] => self.gen_keycode(Vk::Next(Attr::new().into())),
-                            &[15] => self.gen_keycode(Vk::F5(Attr::new().into())),
-                            &[17] => self.gen_keycode(Vk::F6(Attr::new().into())),
-                            &[18] => self.gen_keycode(Vk::F7(Attr::new().into())),
-                            &[19] => self.gen_keycode(Vk::F8(Attr::new().into())),
-                            &[20] => self.gen_keycode(Vk::F9(Attr::new().into())),
-                            &[21] => self.gen_keycode(Vk::F10(Attr::new().into())),
-                            &[23] => self.gen_keycode(Vk::F11(Attr::new().into())),
-                            &[24] => self.gen_keycode(Vk::F12(Attr::new().into())),
-                            &[1, 2] => self.gen_keycode(Vk::Home(Attr::new().shift().into())),
-                            &[2, 2] => self.gen_keycode(Vk::Insert(Attr::new().shift().into())),
-                            &[3, 2] => self.gen_keycode(Vk::Delete(Attr::new().shift().into())),
-                            &[4, 2] => self.gen_keycode(Vk::End(Attr::new().shift().into())),
-                            &[5, 2] => self.gen_keycode(Vk::Prior(Attr::new().shift().into())),
-                            &[6, 2] => self.gen_keycode(Vk::Next(Attr::new().shift().into())),
-                            &[15, 2] => self.gen_keycode(Vk::F5(Attr::new().shift().into())),
-                            &[17, 2] => self.gen_keycode(Vk::F6(Attr::new().shift().into())),
-                            &[18, 2] => self.gen_keycode(Vk::F7(Attr::new().shift().into())),
-                            &[19, 2] => self.gen_keycode(Vk::F8(Attr::new().shift().into())),
-                            &[20, 2] => self.gen_keycode(Vk::F9(Attr::new().shift().into())),
-                            &[21, 2] => self.gen_keycode(Vk::F10(Attr::new().shift().into())),
-                            &[23, 2] => self.gen_keycode(Vk::F11(Attr::new().shift().into())),
-                            &[24, 2] => self.gen_keycode(Vk::F12(Attr::new().shift().into())),
+                            &[1] => self.gen_keycode(Vk::Home(attr.into())),
+                            &[2] => self.gen_keycode(Vk::Insert(attr.into())),
+                            &[3] => self.gen_keycode(Vk::Delete(attr.into())),
+                            &[4] => self.gen_keycode(Vk::End(attr.into())),
+                            &[5] => self.gen_keycode(Vk::Prior(attr.into())),
+                            &[6] => self.gen_keycode(Vk::Next(attr.into())),
+                            &[15] => self.gen_keycode(Vk::F5(attr.into())),
+                            &[17] => self.gen_keycode(Vk::F6(attr.into())),
+                            &[18] => self.gen_keycode(Vk::F7(attr.into())),
+                            &[19] => self.gen_keycode(Vk::F8(attr.into())),
+                            &[20] => self.gen_keycode(Vk::F9(attr.into())),
+                            &[21] => self.gen_keycode(Vk::F10(attr.into())),
+                            &[23] => self.gen_keycode(Vk::F11(attr.into())),
+                            &[24] => self.gen_keycode(Vk::F12(attr.into())),
+                            &[1, 2] => self.gen_keycode(Vk::Home(attr.shift().into())),
+                            &[2, 2] => self.gen_keycode(Vk::Insert(attr.shift().into())),
+                            &[3, 2] => self.gen_keycode(Vk::Delete(attr.shift().into())),
+                            &[4, 2] => self.gen_keycode(Vk::End(attr.shift().into())),
+                            &[5, 2] => self.gen_keycode(Vk::Prior(attr.shift().into())),
+                            &[6, 2] => self.gen_keycode(Vk::Next(attr.shift().into())),
+                            &[15, 2] => self.gen_keycode(Vk::F5(attr.shift().into())),
+                            &[17, 2] => self.gen_keycode(Vk::F6(attr.shift().into())),
+                            &[18, 2] => self.gen_keycode(Vk::F7(attr.shift().into())),
+                            &[19, 2] => self.gen_keycode(Vk::F8(attr.shift().into())),
+                            &[20, 2] => self.gen_keycode(Vk::F9(attr.shift().into())),
+                            &[21, 2] => self.gen_keycode(Vk::F10(attr.shift().into())),
+                            &[23, 2] => self.gen_keycode(Vk::F11(attr.shift().into())),
+                            &[24, 2] => self.gen_keycode(Vk::F12(attr.shift().into())),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it

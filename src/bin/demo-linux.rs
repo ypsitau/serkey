@@ -31,42 +31,45 @@ fn main() -> std::io::Result<()> {
 }
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
-    let print_key = |text: &str, is_shift: bool| {
-        info!("{}{}", text, if is_shift { " + Shift" } else { "" });
+    let print_key = |text: &str, modifier: serkey::Modifier| {
+        info!("{}{}{}{}", text,
+            if modifier.is_shift() { " + Shift" } else { "" },
+            if modifier.is_control() { " + Control" } else { "" },
+            if modifier.is_alt() { " + Alt" } else { "" });
     };
     for &byte in buf {
         parser.push(byte);
         while let Some(keycode) = parser.next_keycode() {
             match keycode {
-                serkey::Vk::CookedChar(ch) => { info!("CookedChar: {}", ch); }
-                serkey::Vk::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
-                serkey::Vk::Back(attr) => { print_key("Back", attr.is_shift()); }
-                serkey::Vk::Return(attr) => { print_key("Return", attr.is_shift()); }
-                serkey::Vk::Left(attr) => { print_key("Left", attr.is_shift()); }
-                serkey::Vk::Right(attr) => { print_key("Right", attr.is_shift()); }
-                serkey::Vk::Up(attr) => { print_key("Up", attr.is_shift()); }
-                serkey::Vk::Down(attr) => { print_key("Down", attr.is_shift()); }
-                serkey::Vk::Home(attr) => { print_key("Home", attr.is_shift()); }
-                serkey::Vk::End(attr) => { print_key("End", attr.is_shift()); }
-                serkey::Vk::Prior(attr) => { print_key("Prior", attr.is_shift()); }
-                serkey::Vk::Next(attr) => { print_key("Next", attr.is_shift()); }
-                serkey::Vk::Tab(attr) => { print_key("Tab", attr.is_shift()); }
-                serkey::Vk::OemBacktab(attr) => { print_key("OemBacktab", attr.is_shift()); }
-                serkey::Vk::Delete(attr) => { print_key("Delete", attr.is_shift()); }
-                serkey::Vk::Insert(attr) => { print_key("Insert", attr.is_shift()); }
-                serkey::Vk::Escape(attr) => { print_key("Esc", attr.is_shift()); }
-                serkey::Vk::F1(attr) => { print_key("F1", attr.is_shift()); }
-                serkey::Vk::F2(attr) => { print_key("F2", attr.is_shift()); }
-                serkey::Vk::F3(attr) => { print_key("F3", attr.is_shift()); }
-                serkey::Vk::F4(attr) => { print_key("F4", attr.is_shift()); }
-                serkey::Vk::F5(attr) => { print_key("F5", attr.is_shift()); }
-                serkey::Vk::F6(attr) => { print_key("F6", attr.is_shift()); }
-                serkey::Vk::F7(attr) => { print_key("F7", attr.is_shift()); }
-                serkey::Vk::F8(attr) => { print_key("F8", attr.is_shift()); }
-                serkey::Vk::F9(attr) => { print_key("F9", attr.is_shift()); }
-                serkey::Vk::F10(attr) => { print_key("F10", attr.is_shift()); }
-                serkey::Vk::F11(attr) => { print_key("F11", attr.is_shift()); }
-                serkey::Vk::F12(attr) => { print_key("F12", attr.is_shift()); }
+                serkey::Vk::CookedChar(ch)      => { info!("CookedChar: {}", ch); }
+                serkey::Vk::CookedCtrl(n)       => { info!("CookedCtrl: 0x{:02x}", n); }
+                serkey::Vk::Back(attr)          => { print_key("Back", attr.modifier()); }
+                serkey::Vk::Return(attr)        => { print_key("Return", attr.modifier()); }
+                serkey::Vk::Left(attr)          => { print_key("Left", attr.modifier()); }
+                serkey::Vk::Right(attr)         => { print_key("Right", attr.modifier()); }
+                serkey::Vk::Up(attr)            => { print_key("Up", attr.modifier()); }
+                serkey::Vk::Down(attr)          => { print_key("Down", attr.modifier()); }
+                serkey::Vk::Home(attr)          => { print_key("Home", attr.modifier()); }
+                serkey::Vk::End(attr)           => { print_key("End", attr.modifier()); }
+                serkey::Vk::Prior(attr)         => { print_key("Prior", attr.modifier()); }
+                serkey::Vk::Next(attr)          => { print_key("Next", attr.modifier()); }
+                serkey::Vk::Tab(attr)           => { print_key("Tab", attr.modifier()); }
+                serkey::Vk::OemBacktab(attr)    => { print_key("OemBacktab", attr.modifier()); }
+                serkey::Vk::Delete(attr)        => { print_key("Delete", attr.modifier()); }
+                serkey::Vk::Insert(attr)        => { print_key("Insert", attr.modifier()); }
+                serkey::Vk::Escape(attr)        => { print_key("Esc", attr.modifier()); }
+                serkey::Vk::F1(attr)            => { print_key("F1", attr.modifier()); }
+                serkey::Vk::F2(attr)            => { print_key("F2", attr.modifier()); }
+                serkey::Vk::F3(attr)            => { print_key("F3", attr.modifier()); }
+                serkey::Vk::F4(attr)            => { print_key("F4", attr.modifier()); }
+                serkey::Vk::F5(attr)            => { print_key("F5", attr.modifier()); }
+                serkey::Vk::F6(attr)            => { print_key("F6", attr.modifier()); }
+                serkey::Vk::F7(attr)            => { print_key("F7", attr.modifier()); }
+                serkey::Vk::F8(attr)            => { print_key("F8", attr.modifier()); }
+                serkey::Vk::F9(attr)            => { print_key("F9", attr.modifier()); }
+                serkey::Vk::F10(attr)           => { print_key("F10", attr.modifier()); }
+                serkey::Vk::F11(attr)           => { print_key("F11", attr.modifier()); }
+                serkey::Vk::F12(attr)           => { print_key("F12", attr.modifier()); }
                 _ => {}
             }
         }
