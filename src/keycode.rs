@@ -6,6 +6,7 @@ const ATTR_ALT_L: u8 = 1 << 4;
 const ATTR_ALT_R: u8 = 1 << 5;
 
 #[derive(Debug, Clone, Copy, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Modifier {
     bits: u8,
 }
@@ -32,6 +33,7 @@ impl Modifier {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Attr<const ID: u8> {
     modifier: Modifier,
 }

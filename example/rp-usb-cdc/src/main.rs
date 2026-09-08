@@ -57,69 +57,77 @@ impl<W: embedded_io_async::Write> SerialTerminal<W> {
 
 struct LineEditor {
     line_buf: String::<128>,
-    idx: usize,
+    icursor: usize,
 }
 
 impl LineEditor {
     pub fn new() -> Self {
         Self {
             line_buf: String::new(),
-            idx: 0,
+            icursor: 0,
         }
     }
-    pub async fn handle_keycode(&mut self, terminal: &mut impl embedded_terminal::Terminal, keycode: serkey::KeyCode) {
-        match keycode {
-            serkey::KeyCode::CookedChar(ch) => {
-                self.line_buf.insert(self.idx, ch).ok();
+    pub async fn handle_vk(&mut self, terminal: &mut impl embedded_terminal::Terminal, vk: serkey::Vk) {
+        match vk {
+            serkey::Vk::CookedChar(ch) => {
+                self.line_buf.insert(self.icursor, ch).ok();
+                let icursor = self.icursor;
+                self.icursor += 1;
                 terminal.save_cursor_position().await;
-                terminal.print(&self.line_buf[self.idx..]).await;
+                terminal.print(&self.line_buf[icursor..]).await;
                 terminal.restore_cursor_position().await;
                 terminal.move_right().await;
-                self.idx += 1;
             }
-            serkey::KeyCode::CookedCtrl(ctrl) => if ctrl == 0x01 {
-                
-            } else if ctrl == 0x0b {
-            
+            serkey::Vk::CookedCtrl(ctrl) =>
+            if ctrl == b'A' - b'@' {
+            } else if ctrl == b'B' - b'@' {
+            } else if ctrl == b'D' - b'@' {
+            } else if ctrl == b'E' - b'@' {
+            } else if ctrl == b'F' - b'@' {
+            } else if ctrl == b'K' - b'@' {
+            } else if ctrl == b'N' - b'@' {
+            } else if ctrl == b'P' - b'@' {
             }
-            serkey::KeyCode::Enter => {
-                self.idx = 0;
+            serkey::Vk::Return(_) => {
+                self.icursor = 0;
                 self.line_buf.clear();
                 terminal.print("\r\n").await;
             }
-            serkey::KeyCode::Delete => {
-                if self.idx < self.line_buf.len() {
-                    self.line_buf.remove(self.idx);
+            serkey::Vk::Delete(_) => {
+                if self.icursor < self.line_buf.len() {
+                    let icursor = self.icursor;
+                    self.line_buf.remove(self.icursor);
                     terminal.save_cursor_position().await;
-                    terminal.print(&self.line_buf[self.idx..]).await;
+                    terminal.print(&self.line_buf[icursor..]).await;
                     terminal.erase_to_end_of_line().await;
                     terminal.restore_cursor_position().await;
                 }
             }
-            serkey::KeyCode::Backspace => {
-                if self.idx > 0 {
-                    self.idx -= 1;
-                    self.line_buf.remove(self.idx);
+            serkey::Vk::Back(_) => {
+                if self.icursor > 0 {
+                    self.icursor -= 1;
+                    let icursor = self.icursor;
+                    self.line_buf.remove(self.icursor);
                     terminal.move_left().await;
                     terminal.save_cursor_position().await;
-                    terminal.print(&self.line_buf[self.idx..]).await;
+                    terminal.print(&self.line_buf[icursor..]).await;
                     terminal.erase_to_end_of_line().await;
                     terminal.restore_cursor_position().await;
                 }
             }
-            serkey::KeyCode::Home => {
-                self.idx = 0;
+            serkey::Vk::Home(_) => {
+                self.icursor = 0;
                 terminal.move_to_beginning_of_line().await;
             }
-            serkey::KeyCode::Left => {
-                if self.idx > 0 {
-                    self.idx -= 1;
+            serkey::Vk::Left(_) => {
+                if self.icursor > 0 {
+                    self.icursor -= 1;
                     terminal.move_left().await;
                 }
             }
-            serkey::KeyCode::Right => {
-                if self.idx < self.line_buf.len() {
-                    self.idx += 1;
+            serkey::Vk::Right(_) => {
+                if self.icursor < self.line_buf.len() {
+                    self.icursor += 1;
                     terminal.move_right().await;
                 }
             }
@@ -270,8 +278,8 @@ async fn main(_spawner: Spawner) {
                 feed_parser(&mut serkey_parser, buf_read);
                 //for &byte in buf_read {
                 //    serkey_parser.push(byte);
-                //    while let Some(keycode) = serkey_parser.next_keycode() {
-                //        line_editor.handle_keycode(&mut terminal, keycode).await;
+                //    while let Some(vk) = serkey_parser.next_vk() {
+                //        line_editor.handle_vk(&mut terminal, vk).await;
                 //    }
                 //}
             };
@@ -292,40 +300,47 @@ async fn main(_spawner: Spawner) {
 }
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
+    use serkey::Vk;
+    let print_key = |text: &str, modifier: serkey::Modifier| {
+        info!("{}{}{}{}", text,
+            if modifier.is_shift() { " + Shift" } else { "" },
+            if modifier.is_control() { " + Control" } else { "" },
+            if modifier.is_alt() { " + Alt" } else { "" });
+    };
     for &byte in buf {
         parser.push(byte);
-        while let Some(keycode) = parser.next_keycode() {
-            match keycode {
-                serkey::KeyCode::CookedChar(ch) => { info!("CookedChar: {}", ch); }
-                serkey::KeyCode::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
-                serkey::KeyCode::Backspace => { info!("Backspace"); }
-                serkey::KeyCode::Enter => { info!("Enter"); }
-                serkey::KeyCode::Left => { info!("Left"); }
-                serkey::KeyCode::Right => { info!("Right"); }
-                serkey::KeyCode::Up => { info!("Up"); }
-                serkey::KeyCode::Down => { info!("Down"); }
-                serkey::KeyCode::Home => { info!("Home"); }
-                serkey::KeyCode::End => { info!("End"); }
-                serkey::KeyCode::PageUp => { info!("PageUp"); }
-                serkey::KeyCode::PageDown => { info!("PageDown"); }
-                serkey::KeyCode::Tab => { info!("Tab"); }
-                serkey::KeyCode::BackTab => { info!("BackTab"); }
-                serkey::KeyCode::Delete => { info!("Delete"); }
-                serkey::KeyCode::Insert => { info!("Insert"); }
-                serkey::KeyCode::F(n) => { info!("F{}", n); }
-                serkey::KeyCode::Null => { info!("Null"); }
-                serkey::KeyCode::Esc => { info!("Esc"); }
-                serkey::KeyCode::ShiftLeft => { info!("ShiftLeft"); }
-                serkey::KeyCode::ShiftRight => { info!("ShiftRight"); }
-                serkey::KeyCode::ShiftUp => { info!("ShiftUp"); }
-                serkey::KeyCode::ShiftDown => { info!("ShiftDown"); }
-                serkey::KeyCode::ShiftHome => { info!("ShiftHome"); }
-                serkey::KeyCode::ShiftEnd => { info!("ShiftEnd"); }
-                serkey::KeyCode::ShiftPageUp => { info!("ShiftPageUp"); }
-                serkey::KeyCode::ShiftPageDown => { info!("ShiftPageDown"); }
-                serkey::KeyCode::ShiftDelete => { info!("ShiftDelete"); }
-                serkey::KeyCode::ShiftInsert => { info!("ShiftInsert"); }
-                serkey::KeyCode::ShiftF(n) => { info!("ShiftF{}", n); }
+        while let Some(vk) = parser.next_vk() {
+            match vk {
+                Vk::CookedChar(ch)      => { info!("CookedChar: {}", ch); }
+                Vk::CookedCtrl(n)       => { info!("CookedCtrl: 0x{:02x}", n); }
+                Vk::Back(attr)          => { print_key("Back", attr.modifier()); }
+                Vk::Return(attr)        => { print_key("Return", attr.modifier()); }
+                Vk::Left(attr)          => { print_key("Left", attr.modifier()); }
+                Vk::Right(attr)         => { print_key("Right", attr.modifier()); }
+                Vk::Up(attr)            => { print_key("Up", attr.modifier()); }
+                Vk::Down(attr)          => { print_key("Down", attr.modifier()); }
+                Vk::Home(attr)          => { print_key("Home", attr.modifier()); }
+                Vk::End(attr)           => { print_key("End", attr.modifier()); }
+                Vk::Prior(attr)         => { print_key("Prior", attr.modifier()); }
+                Vk::Next(attr)          => { print_key("Next", attr.modifier()); }
+                Vk::Tab(attr)           => { print_key("Tab", attr.modifier()); }
+                Vk::OemBacktab(attr)    => { print_key("OemBacktab", attr.modifier()); }
+                Vk::Delete(attr)        => { print_key("Delete", attr.modifier()); }
+                Vk::Insert(attr)        => { print_key("Insert", attr.modifier()); }
+                Vk::Escape(attr)        => { print_key("Esc", attr.modifier()); }
+                Vk::F1(attr)            => { print_key("F1", attr.modifier()); }
+                Vk::F2(attr)            => { print_key("F2", attr.modifier()); }
+                Vk::F3(attr)            => { print_key("F3", attr.modifier()); }
+                Vk::F4(attr)            => { print_key("F4", attr.modifier()); }
+                Vk::F5(attr)            => { print_key("F5", attr.modifier()); }
+                Vk::F6(attr)            => { print_key("F6", attr.modifier()); }
+                Vk::F7(attr)            => { print_key("F7", attr.modifier()); }
+                Vk::F8(attr)            => { print_key("F8", attr.modifier()); }
+                Vk::F9(attr)            => { print_key("F9", attr.modifier()); }
+                Vk::F10(attr)           => { print_key("F10", attr.modifier()); }
+                Vk::F11(attr)           => { print_key("F11", attr.modifier()); }
+                Vk::F12(attr)           => { print_key("F12", attr.modifier()); }
+                _ => {}
             }
         }
     }

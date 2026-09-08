@@ -7,7 +7,7 @@
 //! ```rust
 //! let mut parser = serkey::Parser::new();
 //! ```
-//! Call `serkey::Parser::push()` to feed bytes into the parser and `serkey::Parser::next_keycode()` to retrieve parsed keycodes.
+//! Call `serkey::Parser::push()` to feed bytes into the parser and `serkey::Parser::next_vk()` to retrieve parsed keycodes.
 //! In the following example, assume that `buf` contains the bytes read from the serial device such as UART, USB CDC, and network sockets.
 //!
 //! ```rust
@@ -20,8 +20,8 @@
 //!     };
 //!     for &byte in buf {
 //!         parser.push(byte);
-//!         while let Some(keycode) = parser.next_keycode() {
-//!             match keycode {
+//!         while let Some(vk) = parser.next_vk() {
+//!             match vk {
 //!                 serkey::Vk::CookedChar(ch)      => { info!("CookedChar: {}", ch); }
 //!                 serkey::Vk::CookedCtrl(n)       => { info!("CookedCtrl: 0x{:02x}", n); }
 //!                 serkey::Vk::Back(attr)          => { print_key("Back", attr.modifier()); }
@@ -106,10 +106,10 @@ impl Parser {
             utf8_remain: 0,
         }
     }
-    pub fn next_keycode(&mut self) -> Option<Vk> {
+    pub fn next_vk(&mut self) -> Option<Vk> {
         self.queue.dequeue()
     }
-    fn gen_keycode(&mut self, vk: Vk) {
+    fn gen_vk(&mut self, vk: Vk) {
         self.queue.enqueue(vk).ok();
     }
     pub fn push(&mut self, byte: u8) {
@@ -121,32 +121,32 @@ impl Parser {
                     let attr = Modifier::default();
                     self.stat = match byte {
                         0x08 => {
-                            self.gen_keycode(Vk::Back(attr.into()));
+                            self.gen_vk(Vk::Back(attr.into()));
                             Stat::FirstByte
                         },
                         0x09 => {
-                            self.gen_keycode(Vk::Tab(attr.into()));
+                            self.gen_vk(Vk::Tab(attr.into()));
                             Stat::FirstByte
                         },
                         0x0a => {
-                            self.gen_keycode(Vk::Return(attr.into()));
+                            self.gen_vk(Vk::Return(attr.into()));
                             Stat::AfterLF
                         },
                         0x0d => {
-                            self.gen_keycode(Vk::Return(attr.into()));
+                            self.gen_vk(Vk::Return(attr.into()));
                             Stat::AfterCR
                         },
                         0x1b => Stat::Escape,
                         0x7f => {
-                            self.gen_keycode(Vk::Delete(attr.into()));
+                            self.gen_vk(Vk::Delete(attr.into()));
                             Stat::FirstByte
                         },
                         byte => {
                             if byte < 0x20 {
-                                self.gen_keycode(Vk::CookedCtrl(byte));
+                                self.gen_vk(Vk::CookedCtrl(byte));
                                 Stat::FirstByte
                             } else if byte < 0x80 {
-                                self.gen_keycode(Vk::CookedChar(char::from(byte)));
+                                self.gen_vk(Vk::CookedChar(char::from(byte)));
                                 Stat::FirstByte
                             } else if byte & 0xe0 == 0xc0 {
                                 // Start of a 2-byte UTF-8 sequence
@@ -175,7 +175,7 @@ impl Parser {
                         self.utf8_remain -= 1;
                         if self.utf8_remain == 0 {
                             if let Some(ch) = char::from_u32(self.utf8_accum) {
-                                self.gen_keycode(Vk::CookedChar(ch));
+                                self.gen_vk(Vk::CookedChar(ch));
                             }
                             Stat::FirstByte
                         } else {
@@ -208,7 +208,7 @@ impl Parser {
                     let attr = Modifier::default();
                     self.stat = match byte {
                         0x1b => {
-                            self.gen_keycode(Vk::Escape(attr.into()));
+                            self.gen_vk(Vk::Escape(attr.into()));
                             Stat::FirstByte
                         },
                         b'N' => Stat::SS2,                          // 0x4e
@@ -234,11 +234,11 @@ impl Parser {
                 Stat::SS3 => {
                     let attr = Modifier::default();
                     match byte {
-                        b'P' => self.gen_keycode(Vk::F1(attr.into())),    // 0x50
-                        b'Q' => self.gen_keycode(Vk::F2(attr.into())),    // 0x51
-                        b'R' => self.gen_keycode(Vk::F3(attr.into())),    // 0x52
-                        b'S' => self.gen_keycode(Vk::F4(attr.into())),    // 0x53
-                        b'T' => self.gen_keycode(Vk::F5(attr.into())),    // 0x54
+                        b'P' => self.gen_vk(Vk::F1(attr.into())),    // 0x50
+                        b'Q' => self.gen_vk(Vk::F2(attr.into())),    // 0x51
+                        b'R' => self.gen_vk(Vk::F3(attr.into())),    // 0x52
+                        b'S' => self.gen_vk(Vk::F4(attr.into())),    // 0x53
+                        b'T' => self.gen_vk(Vk::F5(attr.into())),    // 0x54
                         _ => (),
                     }
                     self.stat = Stat::FirstByte;
@@ -307,53 +307,53 @@ impl Parser {
                     };
                     match byte {
                         b'A' => {                          // 0x41
-                            self.gen_keycode(Vk::Up(attr.into()));
+                            self.gen_vk(Vk::Up(attr.into()));
                         }
                         b'B' => {                          // 0x42
-                            self.gen_keycode(Vk::Down(attr.into()));
+                            self.gen_vk(Vk::Down(attr.into()));
                         }
                         b'C' => {                          // 0x43
-                            self.gen_keycode(Vk::Right(attr.into()));
+                            self.gen_vk(Vk::Right(attr.into()));
                         }
                         b'D' => {                          // 0x44
-                            self.gen_keycode(Vk::Left(attr.into()));
+                            self.gen_vk(Vk::Left(attr.into()));
                         }
                         b'F' => {                          // 0x46
-                            self.gen_keycode(Vk::End(attr.into()));
+                            self.gen_vk(Vk::End(attr.into()));
                         }
                         b'H' => {                          // 0x48
-                            self.gen_keycode(Vk::Home(attr.into()));
+                            self.gen_vk(Vk::Home(attr.into()));
                         }
                         b'P' => {                          // 0x50
-                            self.gen_keycode(Vk::F1(attr.into()));
+                            self.gen_vk(Vk::F1(attr.into()));
                         }
                         b'Q' => {                          // 0x51
-                            self.gen_keycode(Vk::F2(attr.into()));
+                            self.gen_vk(Vk::F2(attr.into()));
                         }
                         b'R' => {                          // 0x52
-                            self.gen_keycode(Vk::F3(attr.into()));
+                            self.gen_vk(Vk::F3(attr.into()));
                         }
                         b'S' => {                          // 0x53
-                            self.gen_keycode(Vk::F4(attr.into()));
+                            self.gen_vk(Vk::F4(attr.into()));
                         }
                         b'Z' => {                          // 0x5a
-                            self.gen_keycode(Vk::OemBacktab(attr.into()));
+                            self.gen_vk(Vk::OemBacktab(attr.into()));
                         }
                         b'~' => match params {        // 0x7e
-                            [1, ..] => self.gen_keycode(Vk::Home(attr.into())),
-                            [2, ..] => self.gen_keycode(Vk::Insert(attr.into())),
-                            [3, ..] => self.gen_keycode(Vk::Delete(attr.into())),
-                            [4, ..] => self.gen_keycode(Vk::End(attr.into())),
-                            [5, ..] => self.gen_keycode(Vk::Prior(attr.into())),
-                            [6, ..] => self.gen_keycode(Vk::Next(attr.into())),
-                            [15, ..] => self.gen_keycode(Vk::F5(attr.into())),
-                            [17, ..] => self.gen_keycode(Vk::F6(attr.into())),
-                            [18, ..] => self.gen_keycode(Vk::F7(attr.into())),
-                            [19, ..] => self.gen_keycode(Vk::F8(attr.into())),
-                            [20, ..] => self.gen_keycode(Vk::F9(attr.into())),
-                            [21, ..] => self.gen_keycode(Vk::F10(attr.into())),
-                            [23, ..] => self.gen_keycode(Vk::F11(attr.into())),
-                            [24, ..] => self.gen_keycode(Vk::F12(attr.into())),
+                            [1, ..] => self.gen_vk(Vk::Home(attr.into())),
+                            [2, ..] => self.gen_vk(Vk::Insert(attr.into())),
+                            [3, ..] => self.gen_vk(Vk::Delete(attr.into())),
+                            [4, ..] => self.gen_vk(Vk::End(attr.into())),
+                            [5, ..] => self.gen_vk(Vk::Prior(attr.into())),
+                            [6, ..] => self.gen_vk(Vk::Next(attr.into())),
+                            [15, ..] => self.gen_vk(Vk::F5(attr.into())),
+                            [17, ..] => self.gen_vk(Vk::F6(attr.into())),
+                            [18, ..] => self.gen_vk(Vk::F7(attr.into())),
+                            [19, ..] => self.gen_vk(Vk::F8(attr.into())),
+                            [20, ..] => self.gen_vk(Vk::F9(attr.into())),
+                            [21, ..] => self.gen_vk(Vk::F10(attr.into())),
+                            [23, ..] => self.gen_vk(Vk::F11(attr.into())),
+                            [24, ..] => self.gen_vk(Vk::F12(attr.into())),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
