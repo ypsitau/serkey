@@ -54,6 +54,7 @@
 #![no_std]
 use heapless::Vec;
 use heapless::spsc::Queue;
+mod keycode;
 
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
