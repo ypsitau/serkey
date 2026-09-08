@@ -35,6 +35,8 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
         parser.push(byte);
         while let Some(keycode) = parser.next_keycode() {
             match keycode {
+                serkey::KeyCode::CookedChar(ch) => { info!("CookedChar: {}", ch); }
+                serkey::KeyCode::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
                 serkey::KeyCode::Backspace => { info!("Backspace"); }
                 serkey::KeyCode::Enter => { info!("Enter"); }
                 serkey::KeyCode::Left => { info!("Left"); }
@@ -50,8 +52,6 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 serkey::KeyCode::Delete => { info!("Delete"); }
                 serkey::KeyCode::Insert => { info!("Insert"); }
                 serkey::KeyCode::F(n) => { info!("F{}", n); }
-                serkey::KeyCode::Char(ch) => { info!("Char: {}", ch); }
-                serkey::KeyCode::Ctrl(n) => { info!("Ctrl: 0x{:02x}", n); }
                 serkey::KeyCode::Null => { info!("Null"); }
                 serkey::KeyCode::Esc => { info!("Esc"); }
                 serkey::KeyCode::ShiftLeft => { info!("ShiftLeft"); }

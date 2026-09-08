@@ -16,6 +16,8 @@
 //!         parser.push(byte);
 //!         while let Some(keycode) = parser.next_keycode() {
 //!             match keycode {
+//!                 serkey::KeyCode::CookedChar(ch) => { info!("CookedChar: {}", ch); }
+//!                 serkey::KeyCode::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
 //!                 serkey::KeyCode::Backspace => { info!("Backspace"); }
 //!                 serkey::KeyCode::Enter => { info!("Enter"); }
 //!                 serkey::KeyCode::Left => { info!("Left"); }
@@ -31,8 +33,6 @@
 //!                 serkey::KeyCode::Delete => { info!("Delete"); }
 //!                 serkey::KeyCode::Insert => { info!("Insert"); }
 //!                 serkey::KeyCode::F(n) => { info!("F{}", n); }
-//!                 serkey::KeyCode::Char(ch) => { info!("Char: {}", ch); }
-//!                 serkey::KeyCode::Ctrl(n) => { info!("Ctrl: 0x{:02x}", n); }
 //!                 serkey::KeyCode::Null => { info!("Null"); }
 //!                 serkey::KeyCode::Esc => { info!("Esc"); }
 //!                 serkey::KeyCode::ShiftLeft => { info!("ShiftLeft"); }
@@ -58,6 +58,8 @@ use heapless::spsc::Queue;
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum KeyCode {
+    CookedChar(char),
+    CookedCtrl(u8),
     Backspace,
     Enter,
     Left,
@@ -73,8 +75,6 @@ pub enum KeyCode {
     Delete,
     Insert,
     F(u8),
-    Char(char),
-    Ctrl(u8),
     Null,
     Esc,
     ShiftLeft,
@@ -169,10 +169,10 @@ impl Parser {
                         },
                         byte => {
                             if byte < 0x20 {
-                                self.gen_keycode(KeyCode::Ctrl(byte));
+                                self.gen_keycode(KeyCode::CookedCtrl(byte));
                                 Stat::FirstByte
                             } else if byte < 0x80 {
-                                self.gen_keycode(KeyCode::Char(char::from(byte)));
+                                self.gen_keycode(KeyCode::CookedChar(char::from(byte)));
                                 Stat::FirstByte
                             } else if byte & 0xe0 == 0xc0 {
                                 // Start of a 2-byte UTF-8 sequence
@@ -201,7 +201,7 @@ impl Parser {
                         self.utf8_remain -= 1;
                         if self.utf8_remain == 0 {
                             if let Some(ch) = char::from_u32(self.utf8_accum) {
-                                self.gen_keycode(KeyCode::Char(ch));
+                                self.gen_keycode(KeyCode::CookedChar(ch));
                             }
                             Stat::FirstByte
                         } else {
