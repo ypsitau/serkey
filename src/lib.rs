@@ -12,40 +12,46 @@
 //!
 //! ```rust
 //! fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
+//!     let print_key = |text: &str, modifier: serkey::Modifier| {
+//!         info!("{}{}{}{}", text,
+//!             if modifier.is_shift() { " + Shift" } else { "" },
+//!             if modifier.is_control() { " + Control" } else { "" },
+//!             if modifier.is_alt() { " + Alt" } else { "" });
+//!     };
 //!     for &byte in buf {
 //!         parser.push(byte);
 //!         while let Some(keycode) = parser.next_keycode() {
 //!             match keycode {
-//!                 serkey::Vk::CookedChar(ch) => { info!("CookedChar: {}", ch); }
-//!                 serkey::Vk::CookedCtrl(n) => { info!("CookedCtrl: 0x{:02x}", n); }
-//!                 serkey::Vk::Backspace => { info!("Backspace"); }
-//!                 serkey::Vk::Enter => { info!("Enter"); }
-//!                 serkey::Vk::Left => { info!("Left"); }
-//!                 serkey::Vk::Right => { info!("Right"); }
-//!                 serkey::Vk::Up => { info!("Up"); }
-//!                 serkey::Vk::Down => { info!("Down"); }
-//!                 serkey::Vk::Home => { info!("Home"); }
-//!                 serkey::Vk::End => { info!("End"); }
-//!                 serkey::Vk::PageUp => { info!("PageUp"); }
-//!                 serkey::Vk::PageDown => { info!("PageDown"); }
-//!                 serkey::Vk::Tab => { info!("Tab"); }
-//!                 serkey::Vk::BackTab => { info!("BackTab"); }
-//!                 serkey::Vk::Delete => { info!("Delete"); }
-//!                 serkey::Vk::Insert => { info!("Insert"); }
-//!                 serkey::Vk::F(n) => { info!("F{}", n); }
-//!                 serkey::Vk::Null => { info!("Null"); }
-//!                 serkey::Vk::Esc => { info!("Esc"); }
-//!                 serkey::Vk::ShiftLeft => { info!("ShiftLeft"); }
-//!                 serkey::Vk::ShiftRight => { info!("ShiftRight"); }
-//!                 serkey::Vk::ShiftUp => { info!("ShiftUp"); }
-//!                 serkey::Vk::ShiftDown => { info!("ShiftDown"); }
-//!                 serkey::Vk::ShiftHome => { info!("ShiftHome"); }
-//!                 serkey::Vk::ShiftEnd => { info!("ShiftEnd"); }
-//!                 serkey::Vk::ShiftPageUp => { info!("ShiftPageUp"); }
-//!                 serkey::Vk::ShiftPageDown => { info!("ShiftPageDown"); }
-//!                 serkey::Vk::ShiftDelete => { info!("ShiftDelete"); }
-//!                 serkey::Vk::ShiftInsert => { info!("ShiftInsert"); }
-//!                 serkey::Vk::ShiftF(n) => { info!("ShiftF{}", n); }
+//!                 serkey::Vk::CookedChar(ch)      => { info!("CookedChar: {}", ch); }
+//!                 serkey::Vk::CookedCtrl(n)       => { info!("CookedCtrl: 0x{:02x}", n); }
+//!                 serkey::Vk::Back(attr)          => { print_key("Back", attr.modifier()); }
+//!                 serkey::Vk::Return(attr)        => { print_key("Return", attr.modifier()); }
+//!                 serkey::Vk::Left(attr)          => { print_key("Left", attr.modifier()); }
+//!                 serkey::Vk::Right(attr)         => { print_key("Right", attr.modifier()); }
+//!                 serkey::Vk::Up(attr)            => { print_key("Up", attr.modifier()); }
+//!                 serkey::Vk::Down(attr)          => { print_key("Down", attr.modifier()); }
+//!                 serkey::Vk::Home(attr)          => { print_key("Home", attr.modifier()); }
+//!                 serkey::Vk::End(attr)           => { print_key("End", attr.modifier()); }
+//!                 serkey::Vk::Prior(attr)         => { print_key("Prior", attr.modifier()); }
+//!                 serkey::Vk::Next(attr)          => { print_key("Next", attr.modifier()); }
+//!                 serkey::Vk::Tab(attr)           => { print_key("Tab", attr.modifier()); }
+//!                 serkey::Vk::OemBacktab(attr)    => { print_key("OemBacktab", attr.modifier()); }
+//!                 serkey::Vk::Delete(attr)        => { print_key("Delete", attr.modifier()); }
+//!                 serkey::Vk::Insert(attr)        => { print_key("Insert", attr.modifier()); }
+//!                 serkey::Vk::Escape(attr)        => { print_key("Esc", attr.modifier()); }
+//!                 serkey::Vk::F1(attr)            => { print_key("F1", attr.modifier()); }
+//!                 serkey::Vk::F2(attr)            => { print_key("F2", attr.modifier()); }
+//!                 serkey::Vk::F3(attr)            => { print_key("F3", attr.modifier()); }
+//!                 serkey::Vk::F4(attr)            => { print_key("F4", attr.modifier()); }
+//!                 serkey::Vk::F5(attr)            => { print_key("F5", attr.modifier()); }
+//!                 serkey::Vk::F6(attr)            => { print_key("F6", attr.modifier()); }
+//!                 serkey::Vk::F7(attr)            => { print_key("F7", attr.modifier()); }
+//!                 serkey::Vk::F8(attr)            => { print_key("F8", attr.modifier()); }
+//!                 serkey::Vk::F9(attr)            => { print_key("F9", attr.modifier()); }
+//!                 serkey::Vk::F10(attr)           => { print_key("F10", attr.modifier()); }
+//!                 serkey::Vk::F11(attr)           => { print_key("F11", attr.modifier()); }
+//!                 serkey::Vk::F12(attr)           => { print_key("F12", attr.modifier()); }
+//!                 _ => {}
 //!             }
 //!         }
 //!     }
@@ -287,81 +293,67 @@ impl Parser {
                     };
                 }
                 Stat::CsiFinal => {
-                    let attr = Modifier::default();
+                    let mut attr = Modifier::default();
                     let params = self.params.as_slice();
+                    attr = match params {
+                        &[_, 2] => attr.shift(),
+                        &[_, 3] => attr.alt(),
+                        &[_, 4] => attr.shift().alt(),
+                        &[_, 5] => attr.control(),
+                        &[_, 6] => attr.shift().control(),
+                        &[_, 7] => attr.alt().control(),
+                        &[_, 8] => attr.shift().alt().control(),
+                        _ => attr,
+                    };
                     match byte {
-                        b'A' => match params {                          // 0x41
-                            &[1, 2] => self.gen_keycode(Vk::Up(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::Up(attr.into())),
+                        b'A' => {                          // 0x41
+                            self.gen_keycode(Vk::Up(attr.into()));
                         }
-                        b'B' => match params {                          // 0x42
-                            &[1, 2] => self.gen_keycode(Vk::Down(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::Down(attr.into())),
+                        b'B' => {                          // 0x42
+                            self.gen_keycode(Vk::Down(attr.into()));
                         }
-                        b'C' => match params {                          // 0x43
-                            &[1, 2] => self.gen_keycode(Vk::Right(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::Right(attr.into())),
+                        b'C' => {                          // 0x43
+                            self.gen_keycode(Vk::Right(attr.into()));
                         }
-                        b'D' => match params {                          // 0x44
-                            &[1, 2] => self.gen_keycode(Vk::Left(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::Left(attr.into())),
+                        b'D' => {                          // 0x44
+                            self.gen_keycode(Vk::Left(attr.into()));
                         }
-                        b'F' => match params {                          // 0x46
-                            &[1, 2] => self.gen_keycode(Vk::End(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::End(attr.into())),
+                        b'F' => {                          // 0x46
+                            self.gen_keycode(Vk::End(attr.into()));
                         }
-                        b'H' => match params {                          // 0x48
-                            &[1, 2] => self.gen_keycode(Vk::Home(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::Home(attr.into())),
+                        b'H' => {                          // 0x48
+                            self.gen_keycode(Vk::Home(attr.into()));
                         }
-                        b'P' => match params {                          // 0x50
-                            &[1, 2] => self.gen_keycode(Vk::F1(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::F1(attr.into())),
+                        b'P' => {                          // 0x50
+                            self.gen_keycode(Vk::F1(attr.into()));
                         }
-                        b'Q' => match params {                          // 0x51
-                            &[1, 2] => self.gen_keycode(Vk::F2(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::F2(attr.into())),
+                        b'Q' => {                          // 0x51
+                            self.gen_keycode(Vk::F2(attr.into()));
                         }
-                        b'R' => match params {                          // 0x52
-                            &[1, 2] => self.gen_keycode(Vk::F3(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::F3(attr.into())),
+                        b'R' => {                          // 0x52
+                            self.gen_keycode(Vk::F3(attr.into()));
                         }
-                        b'S' => match params {                          // 0x53
-                            &[1, 2] => self.gen_keycode(Vk::F4(attr.shift().into())),
-                            _ => self.gen_keycode(Vk::F4(attr.into())),
+                        b'S' => {                          // 0x53
+                            self.gen_keycode(Vk::F4(attr.into()));
                         }
-                        b'Z' => match params {                          // 0x5a
-                            _ => self.gen_keycode(Vk::OemBacktab(attr.into())),
+                        b'Z' => {                          // 0x5a
+                            self.gen_keycode(Vk::OemBacktab(attr.into()));
                         }
-                        b'~' => match params {                          // 0x7e
-                            &[1] => self.gen_keycode(Vk::Home(attr.into())),
-                            &[2] => self.gen_keycode(Vk::Insert(attr.into())),
-                            &[3] => self.gen_keycode(Vk::Delete(attr.into())),
-                            &[4] => self.gen_keycode(Vk::End(attr.into())),
-                            &[5] => self.gen_keycode(Vk::Prior(attr.into())),
-                            &[6] => self.gen_keycode(Vk::Next(attr.into())),
-                            &[15] => self.gen_keycode(Vk::F5(attr.into())),
-                            &[17] => self.gen_keycode(Vk::F6(attr.into())),
-                            &[18] => self.gen_keycode(Vk::F7(attr.into())),
-                            &[19] => self.gen_keycode(Vk::F8(attr.into())),
-                            &[20] => self.gen_keycode(Vk::F9(attr.into())),
-                            &[21] => self.gen_keycode(Vk::F10(attr.into())),
-                            &[23] => self.gen_keycode(Vk::F11(attr.into())),
-                            &[24] => self.gen_keycode(Vk::F12(attr.into())),
-                            &[1, 2] => self.gen_keycode(Vk::Home(attr.shift().into())),
-                            &[2, 2] => self.gen_keycode(Vk::Insert(attr.shift().into())),
-                            &[3, 2] => self.gen_keycode(Vk::Delete(attr.shift().into())),
-                            &[4, 2] => self.gen_keycode(Vk::End(attr.shift().into())),
-                            &[5, 2] => self.gen_keycode(Vk::Prior(attr.shift().into())),
-                            &[6, 2] => self.gen_keycode(Vk::Next(attr.shift().into())),
-                            &[15, 2] => self.gen_keycode(Vk::F5(attr.shift().into())),
-                            &[17, 2] => self.gen_keycode(Vk::F6(attr.shift().into())),
-                            &[18, 2] => self.gen_keycode(Vk::F7(attr.shift().into())),
-                            &[19, 2] => self.gen_keycode(Vk::F8(attr.shift().into())),
-                            &[20, 2] => self.gen_keycode(Vk::F9(attr.shift().into())),
-                            &[21, 2] => self.gen_keycode(Vk::F10(attr.shift().into())),
-                            &[23, 2] => self.gen_keycode(Vk::F11(attr.shift().into())),
-                            &[24, 2] => self.gen_keycode(Vk::F12(attr.shift().into())),
+                        b'~' => match params {        // 0x7e
+                            [1, ..] => self.gen_keycode(Vk::Home(attr.into())),
+                            [2, ..] => self.gen_keycode(Vk::Insert(attr.into())),
+                            [3, ..] => self.gen_keycode(Vk::Delete(attr.into())),
+                            [4, ..] => self.gen_keycode(Vk::End(attr.into())),
+                            [5, ..] => self.gen_keycode(Vk::Prior(attr.into())),
+                            [6, ..] => self.gen_keycode(Vk::Next(attr.into())),
+                            [15, ..] => self.gen_keycode(Vk::F5(attr.into())),
+                            [17, ..] => self.gen_keycode(Vk::F6(attr.into())),
+                            [18, ..] => self.gen_keycode(Vk::F7(attr.into())),
+                            [19, ..] => self.gen_keycode(Vk::F8(attr.into())),
+                            [20, ..] => self.gen_keycode(Vk::F9(attr.into())),
+                            [21, ..] => self.gen_keycode(Vk::F10(attr.into())),
+                            [23, ..] => self.gen_keycode(Vk::F11(attr.into())),
+                            [24, ..] => self.gen_keycode(Vk::F12(attr.into())),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
