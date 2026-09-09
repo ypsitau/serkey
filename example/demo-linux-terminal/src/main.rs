@@ -75,7 +75,7 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 Vk::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
                 _ => { continue; }
             }
-            info!("{}", strbuf);
+            info!("{}", strbuf.as_str());
         }
     }
 }
