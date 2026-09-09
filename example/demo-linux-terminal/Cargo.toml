@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 serkey = { path = "../.." }
 libc = "0.2"
+heapless = "0.9.3"
