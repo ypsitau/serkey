@@ -1,3 +1,4 @@
+use std::println as info;
 use std::io::Read as _;
 use std::os::unix::io::AsRawFd as _;
 
@@ -72,9 +73,9 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 Vk::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
                 Vk::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
                 Vk::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
-                _ => {}
+                _ => { continue; }
             }
-            println!("{}", strbuf);
+            info!("{}", strbuf);
         }
     }
 }
