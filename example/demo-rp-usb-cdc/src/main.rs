@@ -134,8 +134,8 @@ async fn feed_parser(parser: &mut serkey::Parser, buf: &[u8], mut writer: impl e
                 Vk::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()).ok(); }
                 _ => { continue; }
             }
-            let _ = writer.write_all(strbuf.as_bytes()).await;
-            let _ = writer.write_all(b"\r\n").await;
+            writer.write_all(strbuf.as_bytes()).await.ok();
+            writer.write_all(b"\r\n").await.ok();
         }
     }
 }
