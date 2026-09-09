@@ -46,14 +46,8 @@ async fn main(_spawner: Spawner) {
             static STATIC_CELL: StaticCell<[u8; CONTROL_BUF_SIZE]> = StaticCell::new();
             STATIC_CELL.init([0; CONTROL_BUF_SIZE])
         };
-        //let device_handler = { // should be replaced by make_static macro when it becomes available
-        //    static STATIC_CELL: StaticCell<DeviceHandler> = StaticCell::new();
-        //    STATIC_CELL.init(DeviceHandler::new())
-        //};
-        let usb_builder = usb::Builder::new(usb_driver, config,
-            config_descriptor_buf, bos_descriptor_buf, msos_descriptor_buf, control_buf);
-        //usb_builder.handler(device_handler);
-        usb_builder
+        usb::Builder::new(usb_driver, config,
+            config_descriptor_buf, bos_descriptor_buf, msos_descriptor_buf, control_buf)
     };
     let cdc_driver = {
         let state = {
