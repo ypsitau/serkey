@@ -18,9 +18,9 @@ impl Modifier {
     pub const RIGHT_SHIFT: u8           = 1 << 5;
     pub const RIGHT_ALT: u8             = 1 << 6;
     pub const RIGHT_META: u8            = 1 << 7;
-    pub fn control(self) -> Self        { self.control_l() }
-    pub fn control_l(self) -> Self      { Self { bits: self.bits | Self::LEFT_CTRL, } }
-    pub fn control_r(self) -> Self      { Self { bits: self.bits | Self::RIGHT_CTRL, } }
+    pub fn ctrl(self) -> Self        { self.ctrl_l() }
+    pub fn ctrl_l(self) -> Self      { Self { bits: self.bits | Self::LEFT_CTRL, } }
+    pub fn ctrl_r(self) -> Self      { Self { bits: self.bits | Self::RIGHT_CTRL, } }
     pub fn shift(self) -> Self          { self.shift_l() }
     pub fn shift_r(self) -> Self        { Self { bits: self.bits | Self::RIGHT_SHIFT, } }
     pub fn shift_l(self) -> Self        { Self { bits: self.bits | Self::LEFT_SHIFT, } }
@@ -30,9 +30,9 @@ impl Modifier {
     pub fn meta(self) -> Self           { self.meta_l() }
     pub fn meta_l(self) -> Self         { Self { bits: self.bits | Self::LEFT_META, } }
     pub fn meta_r(self) -> Self         { Self { bits: self.bits | Self::RIGHT_META, } }
-    pub fn is_control(&self) -> bool    { self.bits & (Self::LEFT_CTRL | Self::RIGHT_CTRL) != 0 }
-    pub fn is_control_l(&self) -> bool  { self.bits & Self::LEFT_CTRL != 0 }
-    pub fn is_control_r(&self) -> bool  { self.bits & Self::RIGHT_CTRL != 0 }
+    pub fn is_ctrl(&self) -> bool    { self.bits & (Self::LEFT_CTRL | Self::RIGHT_CTRL) != 0 }
+    pub fn is_ctrl_l(&self) -> bool  { self.bits & Self::LEFT_CTRL != 0 }
+    pub fn is_ctrl_r(&self) -> bool  { self.bits & Self::RIGHT_CTRL != 0 }
     pub fn is_shift(&self) -> bool      { self.bits & (Self::LEFT_SHIFT | Self::RIGHT_SHIFT) != 0 }
     pub fn is_shift_l(&self) -> bool    { self.bits & Self::LEFT_SHIFT != 0 }
     pub fn is_shift_r(&self) -> bool    { self.bits & Self::RIGHT_SHIFT != 0 }
@@ -54,9 +54,9 @@ pub struct Attr<const ID: u16> {
 impl<const ID: u16> Attr<ID> {
     pub fn id(&self) -> u16 { ID }
     pub fn modifier(&self) -> Modifier  { self.modifier }
-    pub fn is_control(&self) -> bool    { self.modifier.is_control() }
-    pub fn is_control_l(&self) -> bool  { self.modifier.is_control_l() }
-    pub fn is_control_r(&self) -> bool  { self.modifier.is_control_r() }
+    pub fn is_ctrl(&self) -> bool    { self.modifier.is_ctrl() }
+    pub fn is_ctrl_l(&self) -> bool  { self.modifier.is_ctrl_l() }
+    pub fn is_ctrl_r(&self) -> bool  { self.modifier.is_ctrl_r() }
     pub fn is_shift(&self) -> bool      { self.modifier.is_shift() }
     pub fn is_shift_l(&self) -> bool    { self.modifier.is_shift_l() }
     pub fn is_shift_r(&self) -> bool    { self.modifier.is_shift_r() }

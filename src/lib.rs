@@ -17,7 +17,7 @@
 //!     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
 //!         write!(strbuf, "{}{}{}{}", text,
 //!             if modifier.is_shift() { " + Shift" } else { "" },
-//!             if modifier.is_control() { " + Control" } else { "" },
+//!             if modifier.is_ctrl() { " + Control" } else { "" },
 //!             if modifier.is_alt() { " + Alt" } else { "" }).ok();
 //!     }
 //!     let mut strbuf: heapless::String<64> = heapless::String::new();
