@@ -18,9 +18,9 @@ impl Modifier {
     pub const RIGHT_SHIFT: u8           = 1 << 5;
     pub const RIGHT_ALT: u8             = 1 << 6;
     pub const RIGHT_META: u8            = 1 << 7;
-    pub fn ctrl(self) -> Self        { self.ctrl_l() }
-    pub fn ctrl_l(self) -> Self      { Self { bits: self.bits | Self::LEFT_CTRL, } }
-    pub fn ctrl_r(self) -> Self      { Self { bits: self.bits | Self::RIGHT_CTRL, } }
+    pub fn ctrl(self) -> Self           { self.ctrl_l() }
+    pub fn ctrl_l(self) -> Self         { Self { bits: self.bits | Self::LEFT_CTRL, } }
+    pub fn ctrl_r(self) -> Self         { Self { bits: self.bits | Self::RIGHT_CTRL, } }
     pub fn shift(self) -> Self          { self.shift_l() }
     pub fn shift_r(self) -> Self        { Self { bits: self.bits | Self::RIGHT_SHIFT, } }
     pub fn shift_l(self) -> Self        { Self { bits: self.bits | Self::LEFT_SHIFT, } }
@@ -30,9 +30,9 @@ impl Modifier {
     pub fn meta(self) -> Self           { self.meta_l() }
     pub fn meta_l(self) -> Self         { Self { bits: self.bits | Self::LEFT_META, } }
     pub fn meta_r(self) -> Self         { Self { bits: self.bits | Self::RIGHT_META, } }
-    pub fn is_ctrl(&self) -> bool    { self.bits & (Self::LEFT_CTRL | Self::RIGHT_CTRL) != 0 }
-    pub fn is_ctrl_l(&self) -> bool  { self.bits & Self::LEFT_CTRL != 0 }
-    pub fn is_ctrl_r(&self) -> bool  { self.bits & Self::RIGHT_CTRL != 0 }
+    pub fn is_ctrl(&self) -> bool       { self.bits & (Self::LEFT_CTRL | Self::RIGHT_CTRL) != 0 }
+    pub fn is_ctrl_l(&self) -> bool     { self.bits & Self::LEFT_CTRL != 0 }
+    pub fn is_ctrl_r(&self) -> bool     { self.bits & Self::RIGHT_CTRL != 0 }
     pub fn is_shift(&self) -> bool      { self.bits & (Self::LEFT_SHIFT | Self::RIGHT_SHIFT) != 0 }
     pub fn is_shift_l(&self) -> bool    { self.bits & Self::LEFT_SHIFT != 0 }
     pub fn is_shift_r(&self) -> bool    { self.bits & Self::RIGHT_SHIFT != 0 }
@@ -54,9 +54,9 @@ pub struct Attr<const ID: u16> {
 impl<const ID: u16> Attr<ID> {
     pub fn id(&self) -> u16 { ID }
     pub fn modifier(&self) -> Modifier  { self.modifier }
-    pub fn is_ctrl(&self) -> bool    { self.modifier.is_ctrl() }
-    pub fn is_ctrl_l(&self) -> bool  { self.modifier.is_ctrl_l() }
-    pub fn is_ctrl_r(&self) -> bool  { self.modifier.is_ctrl_r() }
+    pub fn is_ctrl(&self) -> bool       { self.modifier.is_ctrl() }
+    pub fn is_ctrl_l(&self) -> bool     { self.modifier.is_ctrl_l() }
+    pub fn is_ctrl_r(&self) -> bool     { self.modifier.is_ctrl_r() }
     pub fn is_shift(&self) -> bool      { self.modifier.is_shift() }
     pub fn is_shift_l(&self) -> bool    { self.modifier.is_shift_l() }
     pub fn is_shift_r(&self) -> bool    { self.modifier.is_shift_r() }
@@ -666,7 +666,7 @@ pub enum Key {
     Dot(Attr<{ KEY::DOT }>),
     Slash(Attr<{ KEY::SLASH }>),
     RightShift(Attr<{ KEY::RIGHTSHIFT }>),
-    Kpasterisk(Attr<{ KEY::KPASTERISK }>),
+    KpAsterisk(Attr<{ KEY::KPASTERISK }>),
     LeftAlt(Attr<{ KEY::LEFTALT }>),
     Space(Attr<{ KEY::SPACE }>),
     CapsLock(Attr<{ KEY::CAPSLOCK }>),
@@ -680,22 +680,22 @@ pub enum Key {
     F8(Attr<{ KEY::F8 }>),
     F9(Attr<{ KEY::F9 }>),
     F10(Attr<{ KEY::F10 }>),
-    Numlock(Attr<{ KEY::NUMLOCK }>),
-    Scrolllock(Attr<{ KEY::SCROLLLOCK }>),
+    NumLock(Attr<{ KEY::NUMLOCK }>),
+    ScrollLock(Attr<{ KEY::SCROLLLOCK }>),
     Kp7(Attr<{ KEY::KP7 }>),
     Kp8(Attr<{ KEY::KP8 }>),
     Kp9(Attr<{ KEY::KP9 }>),
-    Kpminus(Attr<{ KEY::KPMINUS }>),
+    KpMinus(Attr<{ KEY::KPMINUS }>),
     Kp4(Attr<{ KEY::KP4 }>),
     Kp5(Attr<{ KEY::KP5 }>),
     Kp6(Attr<{ KEY::KP6 }>),
-    Kpplus(Attr<{ KEY::KPPLUS }>),
+    KpPlus(Attr<{ KEY::KPPLUS }>),
     Kp1(Attr<{ KEY::KP1 }>),
     Kp2(Attr<{ KEY::KP2 }>),
     Kp3(Attr<{ KEY::KP3 }>),
     Kp0(Attr<{ KEY::KP0 }>),
-    Kpdot(Attr<{ KEY::KPDOT }>),
-    Zenkakuhankaku(Attr<{ KEY::ZENKAKUHANKAKU }>),
+    KpDot(Attr<{ KEY::KPDOT }>),
+    ZenkakuHankaku(Attr<{ KEY::ZENKAKUHANKAKU }>),
     Nd102(Attr<{ KEY::ND102 }>),
     F11(Attr<{ KEY::F11 }>),
     F12(Attr<{ KEY::F12 }>),
@@ -703,10 +703,10 @@ pub enum Key {
     Katakana(Attr<{ KEY::KATAKANA }>),
     Hiragana(Attr<{ KEY::HIRAGANA }>),
     Henkan(Attr<{ KEY::HENKAN }>),
-    Katakanahiragana(Attr<{ KEY::KATAKANAHIRAGANA }>),
+    KatakanaHiragana(Attr<{ KEY::KATAKANAHIRAGANA }>),
     Muhenkan(Attr<{ KEY::MUHENKAN }>),
-    Kpjpcomma(Attr<{ KEY::KPJPCOMMA }>),
-    Kpenter(Attr<{ KEY::KPENTER }>),
+    KpJpComma(Attr<{ KEY::KPJPCOMMA }>),
+    KpEnter(Attr<{ KEY::KPENTER }>),
     RightCtrl(Attr<{ KEY::RIGHTCTRL }>),
     KpSlash(Attr<{ KEY::KPSLASH }>),
     Sysrq(Attr<{ KEY::SYSRQ }>),
@@ -727,11 +727,11 @@ pub enum Key {
     VolumeDown(Attr<{ KEY::VOLUMEDOWN }>),
     VolumeUp(Attr<{ KEY::VOLUMEUP }>),
     Power(Attr<{ KEY::POWER }>),
-    Kpequal(Attr<{ KEY::KPEQUAL }>),
-    Kpplusminus(Attr<{ KEY::KPPLUSMINUS }>),
+    KpEqual(Attr<{ KEY::KPEQUAL }>),
+    KpPlusMinus(Attr<{ KEY::KPPLUSMINUS }>),
     Pause(Attr<{ KEY::PAUSE }>),
     Scale(Attr<{ KEY::SCALE }>),
-    Kpcomma(Attr<{ KEY::KPCOMMA }>),
+    KpComma(Attr<{ KEY::KPCOMMA }>),
     Hangeul(Attr<{ KEY::HANGEUL }>),
     Hanguel(Attr<{ KEY::HANGUEL }>),
     Hanja(Attr<{ KEY::HANJA }>),
@@ -764,10 +764,10 @@ pub enum Key {
     Www(Attr<{ KEY::WWW }>),
     Msdos(Attr<{ KEY::MSDOS }>),
     Coffee(Attr<{ KEY::COFFEE }>),
-    Screenlock(Attr<{ KEY::SCREENLOCK }>),
+    ScreenLock(Attr<{ KEY::SCREENLOCK }>),
     RotateDisplay(Attr<{ KEY::ROTATE_DISPLAY }>),
     Direction(Attr<{ KEY::DIRECTION }>),
-    Cyclewindows(Attr<{ KEY::CYCLEWINDOWS }>),
+    CycleWindows(Attr<{ KEY::CYCLEWINDOWS }>),
     Mail(Attr<{ KEY::MAIL }>),
     Bookmarks(Attr<{ KEY::BOOKMARKS }>),
     Computer(Attr<{ KEY::COMPUTER }>),
@@ -776,7 +776,7 @@ pub enum Key {
     CloseCd(Attr<{ KEY::CLOSECD }>),
     EjectCd(Attr<{ KEY::EJECTCD }>),
     EjectCloseCd(Attr<{ KEY::EJECTCLOSECD }>),
-    Nextsong(Attr<{ KEY::NEXTSONG }>),
+    NextSong(Attr<{ KEY::NEXTSONG }>),
     PlayPause(Attr<{ KEY::PLAYPAUSE }>),
     PreviousSong(Attr<{ KEY::PREVIOUSSONG }>),
     StopCd(Attr<{ KEY::STOPCD }>),
@@ -808,8 +808,8 @@ pub enum Key {
     F22(Attr<{ KEY::F22 }>),
     F23(Attr<{ KEY::F23 }>),
     F24(Attr<{ KEY::F24 }>),
-    Playcd(Attr<{ KEY::PLAYCD }>),
-    Pausecd(Attr<{ KEY::PAUSECD }>),
+    PlayCd(Attr<{ KEY::PLAYCD }>),
+    PauseCd(Attr<{ KEY::PAUSECD }>),
     Prog3(Attr<{ KEY::PROG3 }>),
     Prog4(Attr<{ KEY::PROG4 }>),
     AllApplications(Attr<{ KEY::ALL_APPLICATIONS }>),
@@ -817,7 +817,7 @@ pub enum Key {
     Suspend(Attr<{ KEY::SUSPEND }>),
     Close(Attr<{ KEY::CLOSE }>),
     Play(Attr<{ KEY::PLAY }>),
-    Fastforward(Attr<{ KEY::FASTFORWARD }>),
+    FastForward(Attr<{ KEY::FASTFORWARD }>),
     Bassboost(Attr<{ KEY::BASSBOOST }>),
     Print(Attr<{ KEY::PRINT }>),
     Hp(Attr<{ KEY::HP }>),
@@ -947,8 +947,8 @@ pub enum Key {
     Logoff(Attr<{ KEY::LOGOFF }>),
     Dollar(Attr<{ KEY::DOLLAR }>),
     Euro(Attr<{ KEY::EURO }>),
-    Frameback(Attr<{ KEY::FRAMEBACK }>),
-    Frameforward(Attr<{ KEY::FRAMEFORWARD }>),
+    FrameBack(Attr<{ KEY::FRAMEBACK }>),
+    FrameForward(Attr<{ KEY::FRAMEFORWARD }>),
     ContextMenu(Attr<{ KEY::CONTEXT_MENU }>),
     MediaRepeat(Attr<{ KEY::MEDIA_REPEAT }>),
     TenChannelsUp(Attr<{ KEY::TENCHANNELSUP }>),

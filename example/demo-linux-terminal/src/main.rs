@@ -46,7 +46,7 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
             match key {
                 Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
                 Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-                Key::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
+                Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
                 Key::Enter(attr)         => { write_key(&mut strbuf, "Enter", attr.modifier()); }
                 Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
                 Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
@@ -56,7 +56,7 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
                 Key::PageUp(attr)        => { write_key(&mut strbuf, "PageUp", attr.modifier()); }
                 Key::PageDown(attr)      => { write_key(&mut strbuf, "PageDown", attr.modifier()); }
-                Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
+                Key::Backspace(attr)     => { write_key(&mut strbuf, "Backspace", attr.modifier()); }
                 Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
                 Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
                 Key::Esc(attr)           => { write_key(&mut strbuf, "Esc", attr.modifier()); }
