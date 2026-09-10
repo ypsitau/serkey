@@ -7,13 +7,13 @@
 //! ```rust
 //! let mut parser = serkey::Parser::new();
 //! ```
-//! Call `serkey::Parser::push()` to feed bytes into the parser and `serkey::Parser::next_vk()` to retrieve parsed keycodes.
+//! Call `serkey::Parser::push()` to feed bytes into the parser and `serkey::Parser::next_key()` to retrieve parsed keycodes.
 //! In the following example, assume that `buf` contains the bytes read from the serial device such as UART, USB CDC, and network sockets.
 //!
 //! ```rust
 //! fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
 //!     use core::fmt::Write as _;
-//!     use serkey::{Vk, Modifier};
+//!     use serkey::{Key, Modifier};
 //!     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
 //!         write!(strbuf, "{}{}{}{}", text,
 //!             if modifier.is_shift() { " + Shift" } else { "" },
@@ -23,37 +23,37 @@
 //!     let mut strbuf: heapless::String<64> = heapless::String::new();
 //!     for &byte in buf {
 //!         parser.push(byte);
-//!         while let Some(vk) = parser.next_vk() {
-//!             match vk {
-//!                 Vk::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
-//!                 Vk::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-//!                 Vk::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
-//!                 Vk::Return(attr)        => { write_key(&mut strbuf, "Return", attr.modifier()); }
-//!                 Vk::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
-//!                 Vk::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
-//!                 Vk::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
-//!                 Vk::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
-//!                 Vk::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
-//!                 Vk::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
-//!                 Vk::Prior(attr)         => { write_key(&mut strbuf, "Prior", attr.modifier()); }
-//!                 Vk::Next(attr)          => { write_key(&mut strbuf, "Next", attr.modifier()); }
-//!                 Vk::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
-//!                 Vk::OemBacktab(attr)    => { write_key(&mut strbuf, "OemBacktab", attr.modifier()); }
-//!                 Vk::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
-//!                 Vk::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
-//!                 Vk::Escape(attr)        => { write_key(&mut strbuf, "Esc", attr.modifier()); }
-//!                 Vk::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
-//!                 Vk::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
-//!                 Vk::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
-//!                 Vk::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
-//!                 Vk::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
-//!                 Vk::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
-//!                 Vk::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
-//!                 Vk::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
-//!                 Vk::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
-//!                 Vk::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
-//!                 Vk::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
-//!                 Vk::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
+//!         while let Some(key) = parser.next_key() {
+//!             match key {
+//!                 Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
+//!                 Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
+//!                 Key::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
+//!                 Key::Enter(attr)        => { write_key(&mut strbuf, "Enter", attr.modifier()); }
+//!                 Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
+//!                 Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
+//!                 Key::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
+//!                 Key::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
+//!                 Key::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
+//!                 Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
+//!                 Key::Prior(attr)         => { write_key(&mut strbuf, "Prior", attr.modifier()); }
+//!                 Key::Next(attr)          => { write_key(&mut strbuf, "Next", attr.modifier()); }
+//!                 Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
+//!                 Key::OemBacktab(attr)    => { write_key(&mut strbuf, "OemBacktab", attr.modifier()); }
+//!                 Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
+//!                 Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
+//!                 Key::Escape(attr)        => { write_key(&mut strbuf, "Esc", attr.modifier()); }
+//!                 Key::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
+//!                 Key::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
+//!                 Key::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
+//!                 Key::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
+//!                 Key::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
+//!                 Key::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
+//!                 Key::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
+//!                 Key::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
+//!                 Key::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
+//!                 Key::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
+//!                 Key::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
+//!                 Key::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
 //!                 _ => { continue; }
 //!             }
 //!             info!("{}", strbuf.as_str());
@@ -65,7 +65,7 @@
 mod keycode;
 use heapless::Vec;
 use heapless::spsc::Queue;
-pub use keycode::{Vk, Modifier};
+pub use keycode::{Key, Modifier};
 
 #[derive(Debug, PartialEq, Eq)]
 enum Stat {
@@ -89,7 +89,7 @@ enum Stat {
 }
 
 pub struct Parser {
-    queue: Queue<Vk, 8>,
+    queue: Queue<Key, 8>,
     stat: Stat,
     param_accum: u16,
     params: Vec::<u16, 4>,
@@ -110,11 +110,11 @@ impl Parser {
             utf8_remain: 0,
         }
     }
-    pub fn next_vk(&mut self) -> Option<Vk> {
+    pub fn next_key(&mut self) -> Option<Key> {
         self.queue.dequeue()
     }
-    fn gen_vk(&mut self, vk: Vk) {
-        self.queue.enqueue(vk).ok();
+    fn gen_key(&mut self, key: Key) {
+        self.queue.enqueue(key).ok();
     }
     pub fn push(&mut self, byte: u8) {
         let mut cont_flag = true;
@@ -125,32 +125,32 @@ impl Parser {
                     let attr = Modifier::default();
                     self.stat = match byte {
                         0x08 => {
-                            self.gen_vk(Vk::Back(attr.into()));
+                            self.gen_key(Key::Back(attr.into()));
                             Stat::FirstByte
                         },
                         0x09 => {
-                            self.gen_vk(Vk::Tab(attr.into()));
+                            self.gen_key(Key::Tab(attr.into()));
                             Stat::FirstByte
                         },
                         0x0a => {
-                            self.gen_vk(Vk::Return(attr.into()));
+                            self.gen_key(Key::Enter(attr.into()));
                             Stat::AfterLF
                         },
                         0x0d => {
-                            self.gen_vk(Vk::Return(attr.into()));
+                            self.gen_key(Key::Enter(attr.into()));
                             Stat::AfterCR
                         },
                         0x1b => Stat::Escape,
                         0x7f => {
-                            self.gen_vk(Vk::Delete(attr.into()));
+                            self.gen_key(Key::Delete(attr.into()));
                             Stat::FirstByte
                         },
                         byte => {
                             if byte < 0x20 {
-                                self.gen_vk(Vk::CookedCtrl(byte));
+                                self.gen_key(Key::CookedCtrl(byte));
                                 Stat::FirstByte
                             } else if byte < 0x80 {
-                                self.gen_vk(Vk::CookedChar(char::from(byte)));
+                                self.gen_key(Key::CookedChar(char::from(byte)));
                                 Stat::FirstByte
                             } else if byte & 0xe0 == 0xc0 {
                                 // Start of a 2-byte UTF-8 sequence
@@ -179,7 +179,7 @@ impl Parser {
                         self.utf8_remain -= 1;
                         if self.utf8_remain == 0 {
                             if let Some(ch) = char::from_u32(self.utf8_accum) {
-                                self.gen_vk(Vk::CookedChar(ch));
+                                self.gen_key(Key::CookedChar(ch));
                             }
                             Stat::FirstByte
                         } else {
@@ -212,7 +212,7 @@ impl Parser {
                     let attr = Modifier::default();
                     self.stat = match byte {
                         0x1b => {
-                            self.gen_vk(Vk::Escape(attr.into()));
+                            self.gen_key(Key::Esc(attr.into()));
                             Stat::FirstByte
                         },
                         b'N' => Stat::SS2,                          // 0x4e
@@ -238,11 +238,11 @@ impl Parser {
                 Stat::SS3 => {
                     let attr = Modifier::default();
                     match byte {
-                        b'P' => self.gen_vk(Vk::F1(attr.into())),    // 0x50
-                        b'Q' => self.gen_vk(Vk::F2(attr.into())),    // 0x51
-                        b'R' => self.gen_vk(Vk::F3(attr.into())),    // 0x52
-                        b'S' => self.gen_vk(Vk::F4(attr.into())),    // 0x53
-                        b'T' => self.gen_vk(Vk::F5(attr.into())),    // 0x54
+                        b'P' => self.gen_key(Key::F1(attr.into())),    // 0x50
+                        b'Q' => self.gen_key(Key::F2(attr.into())),    // 0x51
+                        b'R' => self.gen_key(Key::F3(attr.into())),    // 0x52
+                        b'S' => self.gen_key(Key::F4(attr.into())),    // 0x53
+                        b'T' => self.gen_key(Key::F5(attr.into())),    // 0x54
                         _ => (),
                     }
                     self.stat = Stat::FirstByte;
@@ -311,53 +311,53 @@ impl Parser {
                     };
                     match byte {
                         b'A' => {                          // 0x41
-                            self.gen_vk(Vk::Up(attr.into()));
+                            self.gen_key(Key::Up(attr.into()));
                         }
                         b'B' => {                          // 0x42
-                            self.gen_vk(Vk::Down(attr.into()));
+                            self.gen_key(Key::Down(attr.into()));
                         }
                         b'C' => {                          // 0x43
-                            self.gen_vk(Vk::Right(attr.into()));
+                            self.gen_key(Key::Right(attr.into()));
                         }
                         b'D' => {                          // 0x44
-                            self.gen_vk(Vk::Left(attr.into()));
+                            self.gen_key(Key::Left(attr.into()));
                         }
                         b'F' => {                          // 0x46
-                            self.gen_vk(Vk::End(attr.into()));
+                            self.gen_key(Key::End(attr.into()));
                         }
                         b'H' => {                          // 0x48
-                            self.gen_vk(Vk::Home(attr.into()));
+                            self.gen_key(Key::Home(attr.into()));
                         }
                         b'P' => {                          // 0x50
-                            self.gen_vk(Vk::F1(attr.into()));
+                            self.gen_key(Key::F1(attr.into()));
                         }
                         b'Q' => {                          // 0x51
-                            self.gen_vk(Vk::F2(attr.into()));
+                            self.gen_key(Key::F2(attr.into()));
                         }
                         b'R' => {                          // 0x52
-                            self.gen_vk(Vk::F3(attr.into()));
+                            self.gen_key(Key::F3(attr.into()));
                         }
                         b'S' => {                          // 0x53
-                            self.gen_vk(Vk::F4(attr.into()));
+                            self.gen_key(Key::F4(attr.into()));
                         }
                         b'Z' => {                          // 0x5a
-                            self.gen_vk(Vk::OemBacktab(attr.into()));
+                            self.gen_key(Key::Tab(attr.shift().into()));
                         }
                         b'~' => match params {        // 0x7e
-                            [1, ..] => self.gen_vk(Vk::Home(attr.into())),
-                            [2, ..] => self.gen_vk(Vk::Insert(attr.into())),
-                            [3, ..] => self.gen_vk(Vk::Delete(attr.into())),
-                            [4, ..] => self.gen_vk(Vk::End(attr.into())),
-                            [5, ..] => self.gen_vk(Vk::Prior(attr.into())),
-                            [6, ..] => self.gen_vk(Vk::Next(attr.into())),
-                            [15, ..] => self.gen_vk(Vk::F5(attr.into())),
-                            [17, ..] => self.gen_vk(Vk::F6(attr.into())),
-                            [18, ..] => self.gen_vk(Vk::F7(attr.into())),
-                            [19, ..] => self.gen_vk(Vk::F8(attr.into())),
-                            [20, ..] => self.gen_vk(Vk::F9(attr.into())),
-                            [21, ..] => self.gen_vk(Vk::F10(attr.into())),
-                            [23, ..] => self.gen_vk(Vk::F11(attr.into())),
-                            [24, ..] => self.gen_vk(Vk::F12(attr.into())),
+                            [1, ..] => self.gen_key(Key::Home(attr.into())),
+                            [2, ..] => self.gen_key(Key::Insert(attr.into())),
+                            [3, ..] => self.gen_key(Key::Delete(attr.into())),
+                            [4, ..] => self.gen_key(Key::End(attr.into())),
+                            [5, ..] => self.gen_key(Key::PageUp(attr.into())),
+                            [6, ..] => self.gen_key(Key::PageDown(attr.into())),
+                            [15, ..] => self.gen_key(Key::F5(attr.into())),
+                            [17, ..] => self.gen_key(Key::F6(attr.into())),
+                            [18, ..] => self.gen_key(Key::F7(attr.into())),
+                            [19, ..] => self.gen_key(Key::F8(attr.into())),
+                            [20, ..] => self.gen_key(Key::F9(attr.into())),
+                            [21, ..] => self.gen_key(Key::F10(attr.into())),
+                            [23, ..] => self.gen_key(Key::F11(attr.into())),
+                            [24, ..] => self.gen_key(Key::F12(attr.into())),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
