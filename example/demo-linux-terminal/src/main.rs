@@ -36,7 +36,7 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
         write!(strbuf, "{}{}{}{}", text,
             if modifier.is_shift() { " + Shift" } else { "" },
-            if modifier.is_control() { " + Ctrl" } else { "" },
+            if modifier.is_ctrl() { " + Ctrl" } else { "" },
             if modifier.is_alt() { " + Alt" } else { "" }).ok();
     }
     let mut strbuf: heapless::String<64> = heapless::String::new();
