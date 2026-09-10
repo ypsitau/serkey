@@ -32,7 +32,7 @@ fn main() -> std::io::Result<()> {
 
 fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
     use core::fmt::Write as _;
-    use serkey::{Vk, Modifier};
+    use serkey::{Key, Modifier};
     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
         write!(strbuf, "{}{}{}{}", text,
             if modifier.is_shift() { " + Shift" } else { "" },
@@ -42,37 +42,36 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
     let mut strbuf: heapless::String<64> = heapless::String::new();
     for &byte in buf {
         parser.push(byte);
-        while let Some(vk) = parser.next_vk() {
-            match vk {
-                Vk::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
-                Vk::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-                Vk::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
-                Vk::Return(attr)        => { write_key(&mut strbuf, "Return", attr.modifier()); }
-                Vk::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
-                Vk::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
-                Vk::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
-                Vk::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
-                Vk::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
-                Vk::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
-                Vk::Prior(attr)         => { write_key(&mut strbuf, "Prior", attr.modifier()); }
-                Vk::Next(attr)          => { write_key(&mut strbuf, "Next", attr.modifier()); }
-                Vk::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
-                Vk::OemBacktab(attr)    => { write_key(&mut strbuf, "OemBacktab", attr.modifier()); }
-                Vk::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
-                Vk::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
-                Vk::Escape(attr)        => { write_key(&mut strbuf, "Esc", attr.modifier()); }
-                Vk::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
-                Vk::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
-                Vk::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
-                Vk::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
-                Vk::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
-                Vk::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
-                Vk::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
-                Vk::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
-                Vk::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
-                Vk::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
-                Vk::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
-                Vk::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
+        while let Some(key) = parser.next_key() {
+            match key {
+                Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
+                Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
+                Key::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
+                Key::Enter(attr)         => { write_key(&mut strbuf, "Enter", attr.modifier()); }
+                Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
+                Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
+                Key::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
+                Key::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
+                Key::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
+                Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
+                Key::PageUp(attr)        => { write_key(&mut strbuf, "PageUp", attr.modifier()); }
+                Key::PageDown(attr)      => { write_key(&mut strbuf, "PageDown", attr.modifier()); }
+                Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
+                Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
+                Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
+                Key::Esc(attr)           => { write_key(&mut strbuf, "Esc", attr.modifier()); }
+                Key::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
+                Key::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
+                Key::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
+                Key::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
+                Key::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
+                Key::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
+                Key::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
+                Key::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
+                Key::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
+                Key::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
+                Key::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
+                Key::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
                 _ => { continue; }
             }
             info!("{}", strbuf.as_str());
