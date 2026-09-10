@@ -17,7 +17,7 @@
 //!     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
 //!         write!(strbuf, "{}{}{}{}", text,
 //!             if modifier.is_shift() { " + Shift" } else { "" },
-//!             if modifier.is_control() { " + Control" } else { "" },
+//!             if modifier.is_control() { " + Ctrl" } else { "" },
 //!             if modifier.is_alt() { " + Alt" } else { "" }).ok();
 //!     }
 //!     let mut strbuf: heapless::String<64> = heapless::String::new();
@@ -28,20 +28,19 @@
 //!                 Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
 //!                 Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
 //!                 Key::Back(attr)          => { write_key(&mut strbuf, "Back", attr.modifier()); }
-//!                 Key::Enter(attr)        => { write_key(&mut strbuf, "Enter", attr.modifier()); }
+//!                 Key::Enter(attr)         => { write_key(&mut strbuf, "Enter", attr.modifier()); }
 //!                 Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
 //!                 Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
 //!                 Key::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
 //!                 Key::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
 //!                 Key::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
 //!                 Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
-//!                 Key::Prior(attr)         => { write_key(&mut strbuf, "Prior", attr.modifier()); }
-//!                 Key::Next(attr)          => { write_key(&mut strbuf, "Next", attr.modifier()); }
+//!                 Key::PageUp(attr)        => { write_key(&mut strbuf, "PageUp", attr.modifier()); }
+//!                 Key::PageDown(attr)      => { write_key(&mut strbuf, "PageDown", attr.modifier()); }
 //!                 Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
-//!                 Key::OemBacktab(attr)    => { write_key(&mut strbuf, "OemBacktab", attr.modifier()); }
 //!                 Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
 //!                 Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
-//!                 Key::Escape(attr)        => { write_key(&mut strbuf, "Esc", attr.modifier()); }
+//!                 Key::Esc(attr)           => { write_key(&mut strbuf, "Esc", attr.modifier()); }
 //!                 Key::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
 //!                 Key::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
 //!                 Key::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
