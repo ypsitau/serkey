@@ -68,9 +68,9 @@ impl LineEditor {
             icursor: 0,
         }
     }
-    pub async fn handle_vk(&mut self, terminal: &mut impl embedded_terminal::Terminal, vk: serkey::Vk) {
-        match vk {
-            serkey::Vk::CookedChar(ch) => {
+    pub async fn handle_key(&mut self, terminal: &mut impl embedded_terminal::Terminal, key: serkey::Key) {
+        match key {
+            serkey::Key::CookedChar(ch) => {
                 self.line_buf.insert(self.icursor, ch).ok();
                 let icursor = self.icursor;
                 self.icursor += 1;
@@ -79,7 +79,7 @@ impl LineEditor {
                 terminal.restore_cursor_position().await;
                 terminal.move_right().await;
             }
-            serkey::Vk::CookedCtrl(ctrl) =>
+            serkey::Key::CookedCtrl(ctrl) =>
             if ctrl == b'A' - b'@' {
             } else if ctrl == b'B' - b'@' {
             } else if ctrl == b'D' - b'@' {
@@ -89,12 +89,12 @@ impl LineEditor {
             } else if ctrl == b'N' - b'@' {
             } else if ctrl == b'P' - b'@' {
             }
-            serkey::Vk::Return(_) => {
+            serkey::Key::Enter(_) => {
                 self.icursor = 0;
                 self.line_buf.clear();
                 terminal.print("\r\n").await;
             }
-            serkey::Vk::Delete(_) => {
+            serkey::Key::Delete(_) => {
                 if self.icursor < self.line_buf.len() {
                     let icursor = self.icursor;
                     self.line_buf.remove(self.icursor);
@@ -104,7 +104,7 @@ impl LineEditor {
                     terminal.restore_cursor_position().await;
                 }
             }
-            serkey::Vk::Back(_) => {
+            serkey::Key::Backspace(_) => {
                 if self.icursor > 0 {
                     self.icursor -= 1;
                     let icursor = self.icursor;
@@ -116,17 +116,17 @@ impl LineEditor {
                     terminal.restore_cursor_position().await;
                 }
             }
-            serkey::Vk::Home(_) => {
+            serkey::Key::Home(_) => {
                 self.icursor = 0;
                 terminal.move_to_beginning_of_line().await;
             }
-            serkey::Vk::Left(_) => {
+            serkey::Key::Left(_) => {
                 if self.icursor > 0 {
                     self.icursor -= 1;
                     terminal.move_left().await;
                 }
             }
-            serkey::Vk::Right(_) => {
+            serkey::Key::Right(_) => {
                 if self.icursor < self.line_buf.len() {
                     self.icursor += 1;
                     terminal.move_right().await;
@@ -275,8 +275,12 @@ async fn main(_spawner: Spawner) {
                 let buf_read = match cdc_receiver.read_packet(buf).await {
                     Ok(n) => &buf[..n], Err(e) => break e,
                 };
-                terminal.process_input(buf_read);
-                //if let Err(e) = cdc_sender.write_packet(buf_read).await { break e; }
+                for &byte in buf_read {
+                    serkey_parser.push(byte);
+                    while let Some(key) = serkey_parser.next_key() {
+                        line_editor.handle_key(&mut terminal, key).await;
+                    }
+                }
             };
             if e != usb::driver::EndpointError::Disabled { break; }
         };
