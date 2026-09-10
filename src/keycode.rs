@@ -10,38 +10,38 @@ pub struct Modifier {
 
 impl Modifier {
     /// Each bit arrangement is the same as the corresponding modifier key bits in the USB HID specification.
-    pub const CONTROL_L: u8             = 1 << 0;
-    pub const SHIFT_L: u8               = 1 << 1;
-    pub const ALT_L: u8                 = 1 << 2;
-    pub const GUI_L: u8                 = 1 << 3;
-    pub const CONTROL_R: u8             = 1 << 4;
-    pub const SHIFT_R: u8               = 1 << 5;
-    pub const ALT_R: u8                 = 1 << 6;
-    pub const GUI_R: u8                 = 1 << 7;
+    pub const LEFT_CTRL: u8             = 1 << 0;
+    pub const LEFT_SHIFT: u8            = 1 << 1;
+    pub const LEFT_ALT: u8              = 1 << 2;
+    pub const LEFT_META: u8             = 1 << 3;
+    pub const RIGHT_CTRL: u8            = 1 << 4;
+    pub const RIGHT_SHIFT: u8           = 1 << 5;
+    pub const RIGHT_ALT: u8             = 1 << 6;
+    pub const RIGHT_META: u8            = 1 << 7;
     pub fn control(self) -> Self        { self.control_l() }
-    pub fn control_l(self) -> Self      { Self { bits: self.bits | Self::CONTROL_L, } }
-    pub fn control_r(self) -> Self      { Self { bits: self.bits | Self::CONTROL_R, } }
+    pub fn control_l(self) -> Self      { Self { bits: self.bits | Self::LEFT_CTRL, } }
+    pub fn control_r(self) -> Self      { Self { bits: self.bits | Self::RIGHT_CTRL, } }
     pub fn shift(self) -> Self          { self.shift_l() }
-    pub fn shift_r(self) -> Self        { Self { bits: self.bits | Self::SHIFT_R, } }
-    pub fn shift_l(self) -> Self        { Self { bits: self.bits | Self::SHIFT_L, } }
+    pub fn shift_r(self) -> Self        { Self { bits: self.bits | Self::RIGHT_SHIFT, } }
+    pub fn shift_l(self) -> Self        { Self { bits: self.bits | Self::LEFT_SHIFT, } }
     pub fn alt(self) -> Self            { self.alt_l() }
-    pub fn alt_l(self) -> Self          { Self { bits: self.bits | Self::ALT_L, } }
-    pub fn alt_r(self) -> Self          { Self { bits: self.bits | Self::ALT_R, } }
-    pub fn gui(self) -> Self            { self.gui_l() }
-    pub fn gui_l(self) -> Self          { Self { bits: self.bits | Self::GUI_L, } }
-    pub fn gui_r(self) -> Self          { Self { bits: self.bits | Self::GUI_R, } }
-    pub fn is_control(&self) -> bool    { self.bits & (Self::CONTROL_L | Self::CONTROL_R) != 0 }
-    pub fn is_control_l(&self) -> bool  { self.bits & Self::CONTROL_L != 0 }
-    pub fn is_control_r(&self) -> bool  { self.bits & Self::CONTROL_R != 0 }
-    pub fn is_shift(&self) -> bool      { self.bits & (Self::SHIFT_L | Self::SHIFT_R) != 0 }
-    pub fn is_shift_l(&self) -> bool    { self.bits & Self::SHIFT_L != 0 }
-    pub fn is_shift_r(&self) -> bool    { self.bits & Self::SHIFT_R != 0 }
-    pub fn is_alt(&self) -> bool        { self.bits & (Self::ALT_L | Self::ALT_R) != 0 }
-    pub fn is_alt_l(&self) -> bool      { self.bits & Self::ALT_L != 0 }
-    pub fn is_alt_r(&self) -> bool      { self.bits & Self::ALT_R != 0 }
-    pub fn is_gui(&self) -> bool        { self.bits & (Self::GUI_L | Self::GUI_R) != 0 }
-    pub fn is_gui_l(&self) -> bool      { self.bits & Self::GUI_L != 0 }
-    pub fn is_gui_r(&self) -> bool      { self.bits & Self::GUI_R != 0 }
+    pub fn alt_l(self) -> Self          { Self { bits: self.bits | Self::LEFT_ALT, } }
+    pub fn alt_r(self) -> Self          { Self { bits: self.bits | Self::RIGHT_ALT, } }
+    pub fn meta(self) -> Self           { self.meta_l() }
+    pub fn meta_l(self) -> Self         { Self { bits: self.bits | Self::LEFT_META, } }
+    pub fn meta_r(self) -> Self         { Self { bits: self.bits | Self::RIGHT_META, } }
+    pub fn is_control(&self) -> bool    { self.bits & (Self::LEFT_CTRL | Self::RIGHT_CTRL) != 0 }
+    pub fn is_control_l(&self) -> bool  { self.bits & Self::LEFT_CTRL != 0 }
+    pub fn is_control_r(&self) -> bool  { self.bits & Self::RIGHT_CTRL != 0 }
+    pub fn is_shift(&self) -> bool      { self.bits & (Self::LEFT_SHIFT | Self::RIGHT_SHIFT) != 0 }
+    pub fn is_shift_l(&self) -> bool    { self.bits & Self::LEFT_SHIFT != 0 }
+    pub fn is_shift_r(&self) -> bool    { self.bits & Self::RIGHT_SHIFT != 0 }
+    pub fn is_alt(&self) -> bool        { self.bits & (Self::LEFT_ALT | Self::RIGHT_ALT) != 0 }
+    pub fn is_alt_l(&self) -> bool      { self.bits & Self::LEFT_ALT != 0 }
+    pub fn is_alt_r(&self) -> bool      { self.bits & Self::RIGHT_ALT != 0 }
+    pub fn is_meta(&self) -> bool       { self.bits & (Self::LEFT_META | Self::RIGHT_META) != 0 }
+    pub fn is_meta_l(&self) -> bool     { self.bits & Self::LEFT_META != 0 }
+    pub fn is_meta_r(&self) -> bool     { self.bits & Self::RIGHT_META != 0 }
 }
 
 /// Represents a keyboard attribute with a specific ID and associated modifier keys.
@@ -63,9 +63,9 @@ impl<const ID: u16> Attr<ID> {
     pub fn is_alt(&self) -> bool        { self.modifier.is_alt() }
     pub fn is_alt_l(&self) -> bool      { self.modifier.is_alt_l() }
     pub fn is_alt_r(&self) -> bool      { self.modifier.is_alt_r() }
-    pub fn is_gui(&self) -> bool        { self.modifier.is_gui() }
-    pub fn is_gui_l(&self) -> bool      { self.modifier.is_gui_l() }
-    pub fn is_gui_r(&self) -> bool      { self.modifier.is_gui_r() }
+    pub fn is_meta(&self) -> bool       { self.modifier.is_meta() }
+    pub fn is_meta_l(&self) -> bool     { self.modifier.is_meta_l() }
+    pub fn is_meta_r(&self) -> bool     { self.modifier.is_meta_r() }
 }
 
 impl<const ID: u16> From<Modifier> for Attr<ID> {
@@ -637,10 +637,10 @@ pub enum Key {
     I(Attr<{ KEY::I }>),
     O(Attr<{ KEY::O }>),
     P(Attr<{ KEY::P }>),
-    Leftbrace(Attr<{ KEY::LEFTBRACE }>),
-    Rightbrace(Attr<{ KEY::RIGHTBRACE }>),
+    LeftBrace(Attr<{ KEY::LEFTBRACE }>),
+    RightBrace(Attr<{ KEY::RIGHTBRACE }>),
     Enter(Attr<{ KEY::ENTER }>),
-    Leftctrl(Attr<{ KEY::LEFTCTRL }>),
+    LeftCtrl(Attr<{ KEY::LEFTCTRL }>),
     A(Attr<{ KEY::A }>),
     S(Attr<{ KEY::S }>),
     D(Attr<{ KEY::D }>),
@@ -653,7 +653,7 @@ pub enum Key {
     Semicolon(Attr<{ KEY::SEMICOLON }>),
     Apostrophe(Attr<{ KEY::APOSTROPHE }>),
     Grave(Attr<{ KEY::GRAVE }>),
-    Leftshift(Attr<{ KEY::LEFTSHIFT }>),
+    LeftShift(Attr<{ KEY::LEFTSHIFT }>),
     Backslash(Attr<{ KEY::BACKSLASH }>),
     Z(Attr<{ KEY::Z }>),
     X(Attr<{ KEY::X }>),
@@ -665,11 +665,11 @@ pub enum Key {
     Comma(Attr<{ KEY::COMMA }>),
     Dot(Attr<{ KEY::DOT }>),
     Slash(Attr<{ KEY::SLASH }>),
-    Rightshift(Attr<{ KEY::RIGHTSHIFT }>),
+    RightShift(Attr<{ KEY::RIGHTSHIFT }>),
     Kpasterisk(Attr<{ KEY::KPASTERISK }>),
-    Leftalt(Attr<{ KEY::LEFTALT }>),
+    LeftAlt(Attr<{ KEY::LEFTALT }>),
     Space(Attr<{ KEY::SPACE }>),
-    Capslock(Attr<{ KEY::CAPSLOCK }>),
+    CapsLock(Attr<{ KEY::CAPSLOCK }>),
     F1(Attr<{ KEY::F1 }>),
     F2(Attr<{ KEY::F2 }>),
     F3(Attr<{ KEY::F3 }>),
@@ -707,10 +707,10 @@ pub enum Key {
     Muhenkan(Attr<{ KEY::MUHENKAN }>),
     Kpjpcomma(Attr<{ KEY::KPJPCOMMA }>),
     Kpenter(Attr<{ KEY::KPENTER }>),
-    Rightctrl(Attr<{ KEY::RIGHTCTRL }>),
-    Kpslash(Attr<{ KEY::KPSLASH }>),
+    RightCtrl(Attr<{ KEY::RIGHTCTRL }>),
+    KpSlash(Attr<{ KEY::KPSLASH }>),
     Sysrq(Attr<{ KEY::SYSRQ }>),
-    Rightalt(Attr<{ KEY::RIGHTALT }>),
+    RightAlt(Attr<{ KEY::RIGHTALT }>),
     Linefeed(Attr<{ KEY::LINEFEED }>),
     Home(Attr<{ KEY::HOME }>),
     Up(Attr<{ KEY::UP }>),
@@ -719,7 +719,7 @@ pub enum Key {
     Right(Attr<{ KEY::RIGHT }>),
     End(Attr<{ KEY::END }>),
     Down(Attr<{ KEY::DOWN }>),
-    Pagedown(Attr<{ KEY::PAGEDOWN }>),
+    PageDown(Attr<{ KEY::PAGEDOWN }>),
     Insert(Attr<{ KEY::INSERT }>),
     Delete(Attr<{ KEY::DELETE }>),
     Macro(Attr<{ KEY::MACRO }>),
@@ -790,10 +790,10 @@ pub enum Key {
     Exit(Attr<{ KEY::EXIT }>),
     Move(Attr<{ KEY::MOVE }>),
     Edit(Attr<{ KEY::EDIT }>),
-    Scrollup(Attr<{ KEY::SCROLLUP }>),
-    Scrolldown(Attr<{ KEY::SCROLLDOWN }>),
-    Kpleftparen(Attr<{ KEY::KPLEFTPAREN }>),
-    Kprightparen(Attr<{ KEY::KPRIGHTPAREN }>),
+    ScrollUp(Attr<{ KEY::SCROLLUP }>),
+    ScrollDown(Attr<{ KEY::SCROLLDOWN }>),
+    KpLeftParen(Attr<{ KEY::KPLEFTPAREN }>),
+    KpRightParen(Attr<{ KEY::KPRIGHTPAREN }>),
     New(Attr<{ KEY::NEW }>),
     Redo(Attr<{ KEY::REDO }>),
     F13(Attr<{ KEY::F13 }>),
@@ -837,12 +837,12 @@ pub enum Key {
     Brightnessup(Attr<{ KEY::BRIGHTNESSUP }>),
     Media(Attr<{ KEY::MEDIA }>),
     Switchvideomode(Attr<{ KEY::SWITCHVIDEOMODE }>),
-    Kbdillumtoggle(Attr<{ KEY::KBDILLUMTOGGLE }>),
-    Kbdillumdown(Attr<{ KEY::KBDILLUMDOWN }>),
-    Kbdillumup(Attr<{ KEY::KBDILLUMUP }>),
+    KbdIllumToggle(Attr<{ KEY::KBDILLUMTOGGLE }>),
+    KbdIllumDown(Attr<{ KEY::KBDILLUMDOWN }>),
+    KbdIllumUp(Attr<{ KEY::KBDILLUMUP }>),
     Send(Attr<{ KEY::SEND }>),
     Reply(Attr<{ KEY::REPLY }>),
-    Forwardmail(Attr<{ KEY::FORWARDMAIL }>),
+    ForwardMail(Attr<{ KEY::FORWARDMAIL }>),
     Save(Attr<{ KEY::SAVE }>),
     Documents(Attr<{ KEY::DOCUMENTS }>),
     Battery(Attr<{ KEY::BATTERY }>),
@@ -862,7 +862,7 @@ pub enum Key {
     Micmute(Attr<{ KEY::MICMUTE }>),
     Ok(Attr<{ KEY::OK }>),
     Select(Attr<{ KEY::SELECT }>),
-    Goto(Attr<{ KEY::GOTO }>),
+    GoTo(Attr<{ KEY::GOTO }>),
     Clear(Attr<{ KEY::CLEAR }>),
     Power2(Attr<{ KEY::POWER2 }>),
     Option(Attr<{ KEY::OPTION }>),
@@ -912,8 +912,8 @@ pub enum Key {
     Green(Attr<{ KEY::GREEN }>),
     Yellow(Attr<{ KEY::YELLOW }>),
     Blue(Attr<{ KEY::BLUE }>),
-    Channelup(Attr<{ KEY::CHANNELUP }>),
-    Channeldown(Attr<{ KEY::CHANNELDOWN }>),
+    ChannelUp(Attr<{ KEY::CHANNELUP }>),
+    ChannelDown(Attr<{ KEY::CHANNELDOWN }>),
     First(Attr<{ KEY::FIRST }>),
     Last(Attr<{ KEY::LAST }>),
     Ab(Attr<{ KEY::AB }>),
@@ -928,20 +928,20 @@ pub enum Key {
     Twen(Attr<{ KEY::TWEN }>),
     Videophone(Attr<{ KEY::VIDEOPHONE }>),
     Games(Attr<{ KEY::GAMES }>),
-    Zoomin(Attr<{ KEY::ZOOMIN }>),
-    Zoomout(Attr<{ KEY::ZOOMOUT }>),
-    Zoomreset(Attr<{ KEY::ZOOMRESET }>),
-    Wordprocessor(Attr<{ KEY::WORDPROCESSOR }>),
+    ZoomIn(Attr<{ KEY::ZOOMIN }>),
+    ZoomOut(Attr<{ KEY::ZOOMOUT }>),
+    ZoomReset(Attr<{ KEY::ZOOMRESET }>),
+    WordProcessor(Attr<{ KEY::WORDPROCESSOR }>),
     Editor(Attr<{ KEY::EDITOR }>),
     Spreadsheet(Attr<{ KEY::SPREADSHEET }>),
-    Graphicseditor(Attr<{ KEY::GRAPHICSEDITOR }>),
+    GraphicsEditor(Attr<{ KEY::GRAPHICSEDITOR }>),
     Presentation(Attr<{ KEY::PRESENTATION }>),
     Database(Attr<{ KEY::DATABASE }>),
     News(Attr<{ KEY::NEWS }>),
-    Voicemail(Attr<{ KEY::VOICEMAIL }>),
-    Addressbook(Attr<{ KEY::ADDRESSBOOK }>),
+    VoiceMail(Attr<{ KEY::VOICEMAIL }>),
+    AddressBook(Attr<{ KEY::ADDRESSBOOK }>),
     Messenger(Attr<{ KEY::MESSENGER }>),
-    Displaytoggle(Attr<{ KEY::DISPLAYTOGGLE }>),
+    DisplayToggle(Attr<{ KEY::DISPLAYTOGGLE }>),
     BrightnessToggle(Attr<{ KEY::BRIGHTNESS_TOGGLE }>),
     Spellcheck(Attr<{ KEY::SPELLCHECK }>),
     Logoff(Attr<{ KEY::LOGOFF }>),
@@ -951,8 +951,8 @@ pub enum Key {
     Frameforward(Attr<{ KEY::FRAMEFORWARD }>),
     ContextMenu(Attr<{ KEY::CONTEXT_MENU }>),
     MediaRepeat(Attr<{ KEY::MEDIA_REPEAT }>),
-    Tenchannelsup(Attr<{ KEY::TENCHANNELSUP }>),
-    Tenchannelsdown(Attr<{ KEY::TENCHANNELSDOWN }>),
+    TenChannelsUp(Attr<{ KEY::TENCHANNELSUP }>),
+    TenChannelsDown(Attr<{ KEY::TENCHANNELSDOWN }>),
     Images(Attr<{ KEY::IMAGES }>),
     NotificationCenter(Attr<{ KEY::NOTIFICATION_CENTER }>),
     PickupPhone(Attr<{ KEY::PICKUP_PHONE }>),
@@ -1138,20 +1138,6 @@ pub enum Key {
     MinInteresting(Attr<{ KEY::MIN_INTERESTING }>),
     Max(Attr<{ KEY::MAX }>),
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// Represents the virtual key codes for the keyboard, as defined in the Windows API.
 /// Original GitHub repository: https://github.com/microsoft/windows-rs/
