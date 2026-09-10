@@ -61,7 +61,7 @@
 //! }
 //! ```
 #![no_std]
-mod keycode;
+use embedded_keycode as keycode;
 use heapless::Vec;
 use heapless::spsc::Queue;
 pub use keycode::{Key, Modifier};
@@ -121,27 +121,27 @@ impl Parser {
             cont_flag = false;
             match self.stat {
                 Stat::FirstByte => {
-                    let attr = Modifier::default();
+                    let modifier = Modifier::default();
                     self.stat = match byte {
                         0x08 => {
-                            self.gen_key(Key::Backspace(attr.into()));
+                            self.gen_key(Key::Backspace(modifier.into()));
                             Stat::FirstByte
                         },
                         0x09 => {
-                            self.gen_key(Key::Tab(attr.into()));
+                            self.gen_key(Key::Tab(modifier.into()));
                             Stat::FirstByte
                         },
                         0x0a => {
-                            self.gen_key(Key::Enter(attr.into()));
+                            self.gen_key(Key::Enter(modifier.into()));
                             Stat::AfterLF
                         },
                         0x0d => {
-                            self.gen_key(Key::Enter(attr.into()));
+                            self.gen_key(Key::Enter(modifier.into()));
                             Stat::AfterCR
                         },
                         0x1b => Stat::Escape,
                         0x7f => {
-                            self.gen_key(Key::Delete(attr.into()));
+                            self.gen_key(Key::Delete(modifier.into()));
                             Stat::FirstByte
                         },
                         byte => {
@@ -208,10 +208,10 @@ impl Parser {
                     };
                 }
                 Stat::Escape => {
-                    let attr = Modifier::default();
+                    let modifier = Modifier::default();
                     self.stat = match byte {
                         0x1b => {
-                            self.gen_key(Key::Esc(attr.into()));
+                            self.gen_key(Key::Esc(modifier.into()));
                             Stat::FirstByte
                         },
                         b'N' => Stat::SS2,                          // 0x4e
@@ -235,13 +235,13 @@ impl Parser {
                     self.stat = Stat::FirstByte;
                 }
                 Stat::SS3 => {
-                    let attr = Modifier::default();
+                    let modifier = Modifier::default();
                     match byte {
-                        b'P' => self.gen_key(Key::F1(attr.into())),    // 0x50
-                        b'Q' => self.gen_key(Key::F2(attr.into())),    // 0x51
-                        b'R' => self.gen_key(Key::F3(attr.into())),    // 0x52
-                        b'S' => self.gen_key(Key::F4(attr.into())),    // 0x53
-                        b'T' => self.gen_key(Key::F5(attr.into())),    // 0x54
+                        b'P' => self.gen_key(Key::F1(modifier.into())),    // 0x50
+                        b'Q' => self.gen_key(Key::F2(modifier.into())),    // 0x51
+                        b'R' => self.gen_key(Key::F3(modifier.into())),    // 0x52
+                        b'S' => self.gen_key(Key::F4(modifier.into())),    // 0x53
+                        b'T' => self.gen_key(Key::F5(modifier.into())),    // 0x54
                         _ => (),
                     }
                     self.stat = Stat::FirstByte;
@@ -296,67 +296,67 @@ impl Parser {
                     };
                 }
                 Stat::CsiFinal => {
-                    let mut attr = Modifier::default();
+                    let mut modifier = Modifier::default();
                     let params = self.params.as_slice();
-                    attr = match params {
-                        &[_, 2] => attr.shift(),
-                        &[_, 3] => attr.alt(),
-                        &[_, 4] => attr.shift().alt(),
-                        &[_, 5] => attr.ctrl(),
-                        &[_, 6] => attr.shift().ctrl(),
-                        &[_, 7] => attr.alt().ctrl(),
-                        &[_, 8] => attr.shift().alt().ctrl(),
-                        _ => attr,
+                    modifier = match params {
+                        &[_, 2] => modifier.shift(),
+                        &[_, 3] => modifier.alt(),
+                        &[_, 4] => modifier.shift().alt(),
+                        &[_, 5] => modifier.ctrl(),
+                        &[_, 6] => modifier.shift().ctrl(),
+                        &[_, 7] => modifier.alt().ctrl(),
+                        &[_, 8] => modifier.shift().alt().ctrl(),
+                        _ => modifier,
                     };
                     match byte {
                         b'A' => {                          // 0x41
-                            self.gen_key(Key::Up(attr.into()));
+                            self.gen_key(Key::Up(modifier.into()));
                         }
                         b'B' => {                          // 0x42
-                            self.gen_key(Key::Down(attr.into()));
+                            self.gen_key(Key::Down(modifier.into()));
                         }
                         b'C' => {                          // 0x43
-                            self.gen_key(Key::Right(attr.into()));
+                            self.gen_key(Key::Right(modifier.into()));
                         }
                         b'D' => {                          // 0x44
-                            self.gen_key(Key::Left(attr.into()));
+                            self.gen_key(Key::Left(modifier.into()));
                         }
                         b'F' => {                          // 0x46
-                            self.gen_key(Key::End(attr.into()));
+                            self.gen_key(Key::End(modifier.into()));
                         }
                         b'H' => {                          // 0x48
-                            self.gen_key(Key::Home(attr.into()));
+                            self.gen_key(Key::Home(modifier.into()));
                         }
                         b'P' => {                          // 0x50
-                            self.gen_key(Key::F1(attr.into()));
+                            self.gen_key(Key::F1(modifier.into()));
                         }
                         b'Q' => {                          // 0x51
-                            self.gen_key(Key::F2(attr.into()));
+                            self.gen_key(Key::F2(modifier.into()));
                         }
                         b'R' => {                          // 0x52
-                            self.gen_key(Key::F3(attr.into()));
+                            self.gen_key(Key::F3(modifier.into()));
                         }
                         b'S' => {                          // 0x53
-                            self.gen_key(Key::F4(attr.into()));
+                            self.gen_key(Key::F4(modifier.into()));
                         }
                         b'Z' => {                          // 0x5a
-                            self.gen_key(Key::Tab(attr.shift().into()));
+                            self.gen_key(Key::Tab(modifier.shift().into()));
                         }
                         b'~' => match params {        // 0x7e
-                            [1, ..] => self.gen_key(Key::Home(attr.into())),
-                            [2, ..] => self.gen_key(Key::Insert(attr.into())),
-                            [3, ..] => self.gen_key(Key::Delete(attr.into())),
-                            [4, ..] => self.gen_key(Key::End(attr.into())),
-                            [5, ..] => self.gen_key(Key::PageUp(attr.into())),
-                            [6, ..] => self.gen_key(Key::PageDown(attr.into())),
-                            [15, ..] => self.gen_key(Key::F5(attr.into())),
-                            [17, ..] => self.gen_key(Key::F6(attr.into())),
-                            [18, ..] => self.gen_key(Key::F7(attr.into())),
-                            [19, ..] => self.gen_key(Key::F8(attr.into())),
-                            [20, ..] => self.gen_key(Key::F9(attr.into())),
-                            [21, ..] => self.gen_key(Key::F10(attr.into())),
-                            [23, ..] => self.gen_key(Key::F11(attr.into())),
-                            [24, ..] => self.gen_key(Key::F12(attr.into())),
+                            [1, ..] => self.gen_key(Key::Home(modifier.into())),
+                            [2, ..] => self.gen_key(Key::Insert(modifier.into())),
+                            [3, ..] => self.gen_key(Key::Delete(modifier.into())),
+                            [4, ..] => self.gen_key(Key::End(modifier.into())),
+                            [5, ..] => self.gen_key(Key::PageUp(modifier.into())),
+                            [6, ..] => self.gen_key(Key::PageDown(modifier.into())),
+                            [15, ..] => self.gen_key(Key::F5(modifier.into())),
+                            [17, ..] => self.gen_key(Key::F6(modifier.into())),
+                            [18, ..] => self.gen_key(Key::F7(modifier.into())),
+                            [19, ..] => self.gen_key(Key::F8(modifier.into())),
+                            [20, ..] => self.gen_key(Key::F9(modifier.into())),
+                            [21, ..] => self.gen_key(Key::F10(modifier.into())),
+                            [23, ..] => self.gen_key(Key::F11(modifier.into())),
+                            [24, ..] => self.gen_key(Key::F12(modifier.into())),
                             _ => (), // Unrecognized CSI parameter, ignore it
                         }
                         _ => (),     // Unrecognized CSI final byte, ignore it
