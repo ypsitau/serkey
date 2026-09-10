@@ -1,4 +1,4 @@
-//! A simple keycode parser for handling UTF-8 and VT100 terminal control sequences.
+//! A simple keycode parser for handling UTF-8 and VT100 terminal ctrl sequences.
 //!
 //! # Example
 //! 
@@ -302,10 +302,10 @@ impl Parser {
                         &[_, 2] => attr.shift(),
                         &[_, 3] => attr.alt(),
                         &[_, 4] => attr.shift().alt(),
-                        &[_, 5] => attr.control(),
-                        &[_, 6] => attr.shift().control(),
-                        &[_, 7] => attr.alt().control(),
-                        &[_, 8] => attr.shift().alt().control(),
+                        &[_, 5] => attr.ctrl(),
+                        &[_, 6] => attr.shift().ctrl(),
+                        &[_, 7] => attr.alt().ctrl(),
+                        &[_, 8] => attr.shift().alt().ctrl(),
                         _ => attr,
                     };
                     match byte {
