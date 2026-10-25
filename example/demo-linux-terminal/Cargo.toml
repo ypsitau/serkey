@@ -1,9 +1,0 @@
-[package]
-name = "demo-linux-terminal"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-serkey = { path = "../.." }
-libc = "0.2"
-heapless = "0.9.3"
