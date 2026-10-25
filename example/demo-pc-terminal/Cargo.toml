@@ -1,0 +1,10 @@
+[package]
+name = "demo-pc-terminal"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+crossterm = { version = "0.29.0" }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_System_Console"] }
