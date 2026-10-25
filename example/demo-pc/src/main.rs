@@ -1,4 +1,3 @@
-use std::println as info;
 use tokio::io::AsyncReadExt as _;
 
 #[tokio::main(flavor = "current_thread")]
@@ -21,14 +20,14 @@ async fn main() -> std::io::Result<()> {
     let mut stdin = tokio::io::stdin();
     let mut buf = [0u8; 32];
     let mut parser = serkey::Parser::new();
-    info!("Ctrl-C to exit");
+    println!("Ctrl-C to exit");
     loop {
         let buf_read = {
             let bytes_read = stdin.read(&mut buf).await?;
             &buf[..bytes_read]
         };
         if buf_read.is_empty() || buf_read.contains(&0x03) { break; }
-        info!("{:02X?}", buf_read);
+        println!("{:02X?}", buf_read);
         feed_parser(&mut parser, &buf_read);
     }
     crossterm::terminal::disable_raw_mode()?;
@@ -79,7 +78,7 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
                 Key::F12(attr)           => { write_key(&mut sbuf, "F12", attr.modifier()); }
                 _ => { continue; }
             }
-            info!("{}", sbuf.as_str());
+            println!("{}", sbuf.as_str());
         }
     }
 }
