@@ -1,12 +1,12 @@
 [package]
-name = "demo-pc"
+name = "main"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 crossterm = { version = "0.29.0" }
 heapless = "0.9.3"
-serkey = { path = "../.." }
+serkey = { workspace = true }
 tokio = { version = "1", features = ["io-std", "io-util", "macros", "rt"] }
 
 [target.'cfg(windows)'.dependencies]

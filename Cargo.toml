@@ -1,18 +1,10 @@
-[package]
-name = "serkey"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = [
+    "lib",
+    "main",
+]
+exclude = ["example"]
 
-[dependencies]
-defmt = { version = "1.1.1", optional = true }
-heapless = "0.9.3"
-embedded-keycode = { git = "https://github.com/ypsitau/embedded-keycode" }
-crossterm = { version = "0.29.0" }
-
-[features]
-default = []
-defmt = ["dep:defmt"]
-
-[target.'cfg(windows)'.dependencies]
-tokio = { version = "1", features = ["io-std", "io-util", "macros", "rt"] }
-windows-sys = { version = "0.61.2", features = ["Win32_System_Console"] }
+[workspace.dependencies]
+serkey = { path = "lib" }

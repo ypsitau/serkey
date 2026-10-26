@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name = "rp_usb_cdc"
+name = "main-rp"
 version = "0.1.0"
 license = "MIT or Apache-2.0"
 
@@ -29,7 +29,7 @@ portable-atomic = { version = "1.5", features = ["critical-section"] } # require
 static_cell = "2"
 embassy-usb = { version = "0.6.0", features = ["defmt"] }
 embassy-usb-driver = { version = "0.2.2", features = ["defmt"] }
-serkey = { path = "../../", features = ["defmt"] }
+serkey = { path = "../../lib", features = ["defmt"] }
 embedded-io = "0.7.1"
 
 [target.'cfg( target_arch = "arm" )'.dependencies]
