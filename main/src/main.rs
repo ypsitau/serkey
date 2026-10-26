@@ -1,4 +1,4 @@
-use tokio::io::AsyncReadExt as _;
+use embedded_io_adapters::tokio_1 as tokio_adapter;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::io::Result<()> {
@@ -17,25 +17,25 @@ async fn main() -> std::io::Result<()> {
             }
         }
     }
-    let mut stdin = tokio::io::stdin();
-    let mut buf = [0u8; 32];
-    let mut parser = serkey::Parser::new();
+    let stdin = tokio_adapter::FromTokio::new(tokio::io::stdin());
+    let mut reader = serkey::Reader::new(stdin);
     print!("Ctrl-C to exit\r\n");
+    let mut sbuf: heapless::String<64> = heapless::String::new();
     loop {
-        let buf_read = {
-            let bytes_read = stdin.read(&mut buf).await?;
-            &buf[..bytes_read]
-        };
-        if buf_read.is_empty() || buf_read.contains(&0x03) { break; }
-        print!("{:02X?}\r\n", buf_read);
-        feed_parser(&mut parser, &buf_read);
+        if let Some(key) = reader.next_key().await {
+            key_to_string(&mut sbuf, &key);
+            print!("{}\r\n", sbuf);
+            sbuf.clear();
+            if let serkey::Key::CookedCtrl(0x03) = key {
+                break;
+            }
+        }
     }
     crossterm::terminal::disable_raw_mode()?;
     Ok(())
 }
 
-fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
-    use core::fmt::Write as _;
+fn key_to_string(sbuf: &mut impl core::fmt::Write, key: &serkey::Key) {
     use serkey::{Key, Modifier};
     fn write_key(sbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
         write!(sbuf, "{}{}{}{}", text,
@@ -43,42 +43,35 @@ fn feed_parser(parser: &mut serkey::Parser, buf: &[u8]) {
             if modifier.is_ctrl() { " + Ctrl" } else { "" },
             if modifier.is_alt() { " + Alt" } else { "" }).ok();
     }
-    let mut sbuf: heapless::String<64> = heapless::String::new();
-    for &byte in buf {
-        parser.push(byte);
-        while let Some(key) = parser.next_key() {
-            match key {
-                Key::CookedChar(ch)      => { write!(sbuf, "CookedChar: {}", ch).ok(); }
-                Key::CookedCtrl(n)       => { write!(sbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-                Key::Tab(attr)           => { write_key(&mut sbuf, "Tab", attr.modifier()); }
-                Key::Enter(attr)         => { write_key(&mut sbuf, "Enter", attr.modifier()); }
-                Key::Left(attr)          => { write_key(&mut sbuf, "Left", attr.modifier()); }
-                Key::Right(attr)         => { write_key(&mut sbuf, "Right", attr.modifier()); }
-                Key::Up(attr)            => { write_key(&mut sbuf, "Up", attr.modifier()); }
-                Key::Down(attr)          => { write_key(&mut sbuf, "Down", attr.modifier()); }
-                Key::Home(attr)          => { write_key(&mut sbuf, "Home", attr.modifier()); }
-                Key::End(attr)           => { write_key(&mut sbuf, "End", attr.modifier()); }
-                Key::PageUp(attr)        => { write_key(&mut sbuf, "PageUp", attr.modifier()); }
-                Key::PageDown(attr)      => { write_key(&mut sbuf, "PageDown", attr.modifier()); }
-                Key::Backspace(attr)     => { write_key(&mut sbuf, "Backspace", attr.modifier()); }
-                Key::Delete(attr)        => { write_key(&mut sbuf, "Delete", attr.modifier()); }
-                Key::Insert(attr)        => { write_key(&mut sbuf, "Insert", attr.modifier()); }
-                Key::Esc(attr)           => { write_key(&mut sbuf, "Esc", attr.modifier()); }
-                Key::F1(attr)            => { write_key(&mut sbuf, "F1", attr.modifier()); }
-                Key::F2(attr)            => { write_key(&mut sbuf, "F2", attr.modifier()); }
-                Key::F3(attr)            => { write_key(&mut sbuf, "F3", attr.modifier()); }
-                Key::F4(attr)            => { write_key(&mut sbuf, "F4", attr.modifier()); }
-                Key::F5(attr)            => { write_key(&mut sbuf, "F5", attr.modifier()); }
-                Key::F6(attr)            => { write_key(&mut sbuf, "F6", attr.modifier()); }
-                Key::F7(attr)            => { write_key(&mut sbuf, "F7", attr.modifier()); }
-                Key::F8(attr)            => { write_key(&mut sbuf, "F8", attr.modifier()); }
-                Key::F9(attr)            => { write_key(&mut sbuf, "F9", attr.modifier()); }
-                Key::F10(attr)           => { write_key(&mut sbuf, "F10", attr.modifier()); }
-                Key::F11(attr)           => { write_key(&mut sbuf, "F11", attr.modifier()); }
-                Key::F12(attr)           => { write_key(&mut sbuf, "F12", attr.modifier()); }
-                _ => { continue; }
-            }
-            print!("{}\r\n", sbuf.as_str());
-        }
+    match key {
+        Key::CookedChar(ch)      => { write!(sbuf, "CookedChar: {}", ch).ok(); }
+        Key::CookedCtrl(n)       => { write!(sbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
+        Key::Tab(attr)           => { write_key(sbuf, "Tab", attr.modifier()); }
+        Key::Enter(attr)         => { write_key(sbuf, "Enter", attr.modifier()); }
+        Key::Left(attr)          => { write_key(sbuf, "Left", attr.modifier()); }
+        Key::Right(attr)         => { write_key(sbuf, "Right", attr.modifier()); }
+        Key::Up(attr)            => { write_key(sbuf, "Up", attr.modifier()); }
+        Key::Down(attr)          => { write_key(sbuf, "Down", attr.modifier()); }
+        Key::Home(attr)          => { write_key(sbuf, "Home", attr.modifier()); }
+        Key::End(attr)           => { write_key(sbuf, "End", attr.modifier()); }
+        Key::PageUp(attr)        => { write_key(sbuf, "PageUp", attr.modifier()); }
+        Key::PageDown(attr)      => { write_key(sbuf, "PageDown", attr.modifier()); }
+        Key::Backspace(attr)     => { write_key(sbuf, "Backspace", attr.modifier()); }
+        Key::Delete(attr)        => { write_key(sbuf, "Delete", attr.modifier()); }
+        Key::Insert(attr)        => { write_key(sbuf, "Insert", attr.modifier()); }
+        Key::Esc(attr)           => { write_key(sbuf, "Esc", attr.modifier()); }
+        Key::F1(attr)            => { write_key(sbuf, "F1", attr.modifier()); }
+        Key::F2(attr)            => { write_key(sbuf, "F2", attr.modifier()); }
+        Key::F3(attr)            => { write_key(sbuf, "F3", attr.modifier()); }
+        Key::F4(attr)            => { write_key(sbuf, "F4", attr.modifier()); }
+        Key::F5(attr)            => { write_key(sbuf, "F5", attr.modifier()); }
+        Key::F6(attr)            => { write_key(sbuf, "F6", attr.modifier()); }
+        Key::F7(attr)            => { write_key(sbuf, "F7", attr.modifier()); }
+        Key::F8(attr)            => { write_key(sbuf, "F8", attr.modifier()); }
+        Key::F9(attr)            => { write_key(sbuf, "F9", attr.modifier()); }
+        Key::F10(attr)           => { write_key(sbuf, "F10", attr.modifier()); }
+        Key::F11(attr)           => { write_key(sbuf, "F11", attr.modifier()); }
+        Key::F12(attr)           => { write_key(sbuf, "F12", attr.modifier()); }
+        _ => ()
     }
 }
