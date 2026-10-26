@@ -6,6 +6,7 @@ use embassy_executor::Spawner;
 use embassy_rp as rp;
 use embassy_usb as usb;
 use static_cell::StaticCell;
+use embedded_io_async::Write as _;
 use {defmt_rtt as _, panic_probe as _};
 
 rp::bind_interrupts!(struct Irqs {
@@ -61,71 +62,66 @@ async fn main(_spawner: Spawner) {
     let fut_usb = usb_device.run();
     let fut_echo = async {
         let (mut cdc_sender, mut cdc_receiver) = cdc_driver.split();
-        let mut parser = serkey::Parser::new();
-        let mut buf = [0u8; 64];
+        let buf_receiver = {
+            static STATIC_CELL: StaticCell<[u8; 64]> = StaticCell::new();
+            STATIC_CELL.init([0u8; 64])
+        };
+        let mut sbuf: heapless::String<64> = heapless::String::new();
+        cdc_receiver.wait_connection().await;
+        info!("Connected");
+        let mut cdc_receiver = cdc_receiver.into_buffered(buf_receiver);
+        let mut reader = serkey::Reader::new(&mut cdc_receiver);
         loop {
-            cdc_receiver.wait_connection().await;
-            info!("Connected");
-            let e = loop {
-                let buf_read = match cdc_receiver.read_packet(&mut buf).await {
-                    Ok(n) => &buf[..n], Err(e) => break e,
-                };
-                feed_parser(&mut parser, buf_read, &mut cdc_sender).await;
-            };
-            if e != usb::driver::EndpointError::Disabled { break; }
+            if let Some(key) = reader.next_key().await {
+                sbuf.clear();
+                key_to_string(&mut sbuf, &key);
+                cdc_sender.write_all(sbuf.as_bytes()).await.unwrap();
+                cdc_sender.write_all(b"\r\n").await.unwrap();
+                cdc_sender.flush().await.unwrap();
+            }
         };
     };
     info!("Starting main loop");
     embassy_futures::join::join(fut_usb, fut_echo).await;
 }
 
-async fn feed_parser(parser: &mut serkey::Parser, buf: &[u8], mut writer: impl embedded_io_async::Write) {
-    use core::fmt::Write as _;
+fn key_to_string(sbuf: &mut impl core::fmt::Write, key: &serkey::Key) {
     use serkey::{Key, Modifier};
-    fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
-        write!(strbuf, "{}{}{}{}", text,
+    fn write_key(sbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
+        write!(sbuf, "{}{}{}{}", text,
             if modifier.is_shift() { " + Shift" } else { "" },
             if modifier.is_ctrl() { " + Ctrl" } else { "" },
             if modifier.is_alt() { " + Alt" } else { "" }).ok();
     }
-    let mut strbuf: heapless::String<64> = heapless::String::new();
-    for &byte in buf {
-        parser.push(byte);
-        while let Some(key) = parser.next_key() {
-            match key {
-                Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
-                Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-                Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
-                Key::Enter(attr)         => { write_key(&mut strbuf, "Enter", attr.modifier()); }
-                Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
-                Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
-                Key::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
-                Key::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
-                Key::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
-                Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
-                Key::PageUp(attr)        => { write_key(&mut strbuf, "PageUp", attr.modifier()); }
-                Key::PageDown(attr)      => { write_key(&mut strbuf, "PageDown", attr.modifier()); }
-                Key::Backspace(attr)     => { write_key(&mut strbuf, "Backspace", attr.modifier()); }
-                Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
-                Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
-                Key::Esc(attr)           => { write_key(&mut strbuf, "Esc", attr.modifier()); }
-                Key::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
-                Key::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
-                Key::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
-                Key::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
-                Key::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
-                Key::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
-                Key::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
-                Key::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
-                Key::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
-                Key::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
-                Key::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
-                Key::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
-                _ => { continue; }
-            }
-            //info!("{}", strbuf.as_str());
-            writer.write_all(strbuf.as_bytes()).await.ok();
-            writer.write_all(b"\r\n").await.ok();
-        }
+    match key {
+        Key::CookedChar(ch)      => { write!(sbuf, "CookedChar: {}", ch).ok(); }
+        Key::CookedCtrl(n)       => { write!(sbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
+        Key::Tab(attr)           => { write_key(sbuf, "Tab", attr.modifier()); }
+        Key::Enter(attr)         => { write_key(sbuf, "Enter", attr.modifier()); }
+        Key::Left(attr)          => { write_key(sbuf, "Left", attr.modifier()); }
+        Key::Right(attr)         => { write_key(sbuf, "Right", attr.modifier()); }
+        Key::Up(attr)            => { write_key(sbuf, "Up", attr.modifier()); }
+        Key::Down(attr)          => { write_key(sbuf, "Down", attr.modifier()); }
+        Key::Home(attr)          => { write_key(sbuf, "Home", attr.modifier()); }
+        Key::End(attr)           => { write_key(sbuf, "End", attr.modifier()); }
+        Key::PageUp(attr)        => { write_key(sbuf, "PageUp", attr.modifier()); }
+        Key::PageDown(attr)      => { write_key(sbuf, "PageDown", attr.modifier()); }
+        Key::Backspace(attr)     => { write_key(sbuf, "Backspace", attr.modifier()); }
+        Key::Delete(attr)        => { write_key(sbuf, "Delete", attr.modifier()); }
+        Key::Insert(attr)        => { write_key(sbuf, "Insert", attr.modifier()); }
+        Key::Esc(attr)           => { write_key(sbuf, "Esc", attr.modifier()); }
+        Key::F1(attr)            => { write_key(sbuf, "F1", attr.modifier()); }
+        Key::F2(attr)            => { write_key(sbuf, "F2", attr.modifier()); }
+        Key::F3(attr)            => { write_key(sbuf, "F3", attr.modifier()); }
+        Key::F4(attr)            => { write_key(sbuf, "F4", attr.modifier()); }
+        Key::F5(attr)            => { write_key(sbuf, "F5", attr.modifier()); }
+        Key::F6(attr)            => { write_key(sbuf, "F6", attr.modifier()); }
+        Key::F7(attr)            => { write_key(sbuf, "F7", attr.modifier()); }
+        Key::F8(attr)            => { write_key(sbuf, "F8", attr.modifier()); }
+        Key::F9(attr)            => { write_key(sbuf, "F9", attr.modifier()); }
+        Key::F10(attr)           => { write_key(sbuf, "F10", attr.modifier()); }
+        Key::F11(attr)           => { write_key(sbuf, "F11", attr.modifier()); }
+        Key::F12(attr)           => { write_key(sbuf, "F12", attr.modifier()); }
+        _ => ()
     }
 }

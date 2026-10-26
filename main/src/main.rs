@@ -23,9 +23,9 @@ async fn main() -> std::io::Result<()> {
     let mut sbuf: heapless::String<64> = heapless::String::new();
     loop {
         if let Some(key) = reader.next_key().await {
+            sbuf.clear();
             key_to_string(&mut sbuf, &key);
             print!("{}\r\n", sbuf);
-            sbuf.clear();
             if let serkey::Key::CookedCtrl(0x03) = key {
                 break;
             }
