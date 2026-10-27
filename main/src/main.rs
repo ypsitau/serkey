@@ -5,15 +5,12 @@ async fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;
     #[cfg(windows)]
     {
-        use windows_sys::Win32::System::Console::{
-            GetStdHandle, GetConsoleMode, SetConsoleMode,
-            ENABLE_VIRTUAL_TERMINAL_INPUT, STD_INPUT_HANDLE,
-        };
+        use windows_sys::Win32::System::Console as wc;
         unsafe {
-            let handle = GetStdHandle(STD_INPUT_HANDLE);
+            let handle = wc::GetStdHandle(wc::STD_INPUT_HANDLE);
             let mut mode = 0;
-            if GetConsoleMode(handle, &mut mode) != 0 {
-                SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_INPUT);
+            if wc::GetConsoleMode(handle, &mut mode) != 0 {
+                wc::SetConsoleMode(handle, mode | wc::ENABLE_VIRTUAL_TERMINAL_INPUT);
             }
         }
     }
