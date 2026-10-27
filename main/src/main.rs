@@ -24,12 +24,12 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-async fn run(mut reader_src: impl io_async::Read) {
+async fn run(mut reader: impl io_async::Read) {
     let mut serkey_reader = serkey::Reader::new();
     print!("Ctrl-C to exit\r\n");
     //let mut sbuf: heapless::String<64> = heapless::String::new();
     loop {
-        if let Some(key) = serkey_reader.read_key(&mut reader_src).await {
+        if let Some(key) = serkey_reader.read_key(&mut reader).await {
             println!("{:?}", key);
             if let serkey::Key::CookedCtrl(0x03) = key { break; }
             //sbuf.clear();
