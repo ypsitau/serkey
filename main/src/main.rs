@@ -1,5 +1,3 @@
-use embedded_io_adapters::tokio_1 as tokio_adapter;
-
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;
@@ -17,12 +15,13 @@ async fn main() -> std::io::Result<()> {
             }
         }
     }
-    let stdin = tokio_adapter::FromTokio::new(tokio::io::stdin());
-    let mut reader = serkey::Reader::new(stdin);
+    let mut stdin = embedded_io_adapters::tokio_1::FromTokio::new(tokio::io::stdin());
+    //let mut stdin = embedded_io_adapters::std::FromStd::new(std::io::stdin());
+    let mut serkey_reader = serkey::Reader::new();
     print!("Ctrl-C to exit\r\n");
     let mut sbuf: heapless::String<64> = heapless::String::new();
     loop {
-        if let Some(key) = reader.next_key().await {
+        if let Some(key) = serkey_reader.read_key(&mut stdin).await {
             sbuf.clear();
             key_to_string(&mut sbuf, &key);
             print!("{}\r\n", sbuf);
