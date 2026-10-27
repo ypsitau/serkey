@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
     loop {
         if let Some(key) = serkey_reader.read_key(&mut stdin).await {
             sbuf.clear();
-            key_to_string(&mut sbuf, &key);
+            format_key(&mut sbuf, &key);
             print!("{}\r\n", sbuf);
             if let serkey::Key::CookedCtrl(0x03) = key {
                 break;
@@ -34,43 +34,43 @@ async fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn key_to_string(sbuf: &mut impl core::fmt::Write, key: &serkey::Key) {
+fn format_key(w: &mut impl core::fmt::Write, key: &serkey::Key) {
     use serkey::{Key, Modifier};
-    fn write_key(sbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
-        write!(sbuf, "{}{}{}{}", text,
-            if modifier.is_shift() { " + Shift" } else { "" },
-            if modifier.is_ctrl() { " + Ctrl" } else { "" },
-            if modifier.is_alt() { " + Alt" } else { "" }).ok();
+    fn sub(w: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
+        write!(w, "{}", text).ok();
+        if modifier.is_shift() { write!(w, " + Shift").ok(); }
+        if modifier.is_ctrl() { write!(w, " + Ctrl").ok(); }
+        if modifier.is_alt() { write!(w, " + Alt").ok(); }
     }
     match key {
-        Key::CookedChar(ch)      => { write!(sbuf, "CookedChar: {}", ch).ok(); }
-        Key::CookedCtrl(n)       => { write!(sbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-        Key::Tab(attr)           => { write_key(sbuf, "Tab", attr.modifier()); }
-        Key::Enter(attr)         => { write_key(sbuf, "Enter", attr.modifier()); }
-        Key::Left(attr)          => { write_key(sbuf, "Left", attr.modifier()); }
-        Key::Right(attr)         => { write_key(sbuf, "Right", attr.modifier()); }
-        Key::Up(attr)            => { write_key(sbuf, "Up", attr.modifier()); }
-        Key::Down(attr)          => { write_key(sbuf, "Down", attr.modifier()); }
-        Key::Home(attr)          => { write_key(sbuf, "Home", attr.modifier()); }
-        Key::End(attr)           => { write_key(sbuf, "End", attr.modifier()); }
-        Key::PageUp(attr)        => { write_key(sbuf, "PageUp", attr.modifier()); }
-        Key::PageDown(attr)      => { write_key(sbuf, "PageDown", attr.modifier()); }
-        Key::Backspace(attr)     => { write_key(sbuf, "Backspace", attr.modifier()); }
-        Key::Delete(attr)        => { write_key(sbuf, "Delete", attr.modifier()); }
-        Key::Insert(attr)        => { write_key(sbuf, "Insert", attr.modifier()); }
-        Key::Esc(attr)           => { write_key(sbuf, "Esc", attr.modifier()); }
-        Key::F1(attr)            => { write_key(sbuf, "F1", attr.modifier()); }
-        Key::F2(attr)            => { write_key(sbuf, "F2", attr.modifier()); }
-        Key::F3(attr)            => { write_key(sbuf, "F3", attr.modifier()); }
-        Key::F4(attr)            => { write_key(sbuf, "F4", attr.modifier()); }
-        Key::F5(attr)            => { write_key(sbuf, "F5", attr.modifier()); }
-        Key::F6(attr)            => { write_key(sbuf, "F6", attr.modifier()); }
-        Key::F7(attr)            => { write_key(sbuf, "F7", attr.modifier()); }
-        Key::F8(attr)            => { write_key(sbuf, "F8", attr.modifier()); }
-        Key::F9(attr)            => { write_key(sbuf, "F9", attr.modifier()); }
-        Key::F10(attr)           => { write_key(sbuf, "F10", attr.modifier()); }
-        Key::F11(attr)           => { write_key(sbuf, "F11", attr.modifier()); }
-        Key::F12(attr)           => { write_key(sbuf, "F12", attr.modifier()); }
+        Key::CookedChar(ch)      => { write!(w, "CookedChar: {}", ch).ok(); }
+        Key::CookedCtrl(n)       => { write!(w, "CookedCtrl: 0x{:02x}", n).ok(); }
+        Key::Tab(attr)           => { sub(w, "Tab", attr.modifier()); }
+        Key::Enter(attr)         => { sub(w, "Enter", attr.modifier()); }
+        Key::Left(attr)          => { sub(w, "Left", attr.modifier()); }
+        Key::Right(attr)         => { sub(w, "Right", attr.modifier()); }
+        Key::Up(attr)            => { sub(w, "Up", attr.modifier()); }
+        Key::Down(attr)          => { sub(w, "Down", attr.modifier()); }
+        Key::Home(attr)          => { sub(w, "Home", attr.modifier()); }
+        Key::End(attr)           => { sub(w, "End", attr.modifier()); }
+        Key::PageUp(attr)        => { sub(w, "PageUp", attr.modifier()); }
+        Key::PageDown(attr)      => { sub(w, "PageDown", attr.modifier()); }
+        Key::Backspace(attr)     => { sub(w, "Backspace", attr.modifier()); }
+        Key::Delete(attr)        => { sub(w, "Delete", attr.modifier()); }
+        Key::Insert(attr)        => { sub(w, "Insert", attr.modifier()); }
+        Key::Esc(attr)           => { sub(w, "Esc", attr.modifier()); }
+        Key::F1(attr)            => { sub(w, "F1", attr.modifier()); }
+        Key::F2(attr)            => { sub(w, "F2", attr.modifier()); }
+        Key::F3(attr)            => { sub(w, "F3", attr.modifier()); }
+        Key::F4(attr)            => { sub(w, "F4", attr.modifier()); }
+        Key::F5(attr)            => { sub(w, "F5", attr.modifier()); }
+        Key::F6(attr)            => { sub(w, "F6", attr.modifier()); }
+        Key::F7(attr)            => { sub(w, "F7", attr.modifier()); }
+        Key::F8(attr)            => { sub(w, "F8", attr.modifier()); }
+        Key::F9(attr)            => { sub(w, "F9", attr.modifier()); }
+        Key::F10(attr)           => { sub(w, "F10", attr.modifier()); }
+        Key::F11(attr)           => { sub(w, "F11", attr.modifier()); }
+        Key::F12(attr)           => { sub(w, "F12", attr.modifier()); }
         _ => ()
     }
 }

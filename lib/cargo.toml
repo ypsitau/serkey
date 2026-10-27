@@ -2,6 +2,11 @@
 name = "serkey"
 version = "0.1.0"
 edition = "2021"
+authors = ["Yutaka Saito <ypsitau@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "A simple keycode parser for handling UTF-8 and VT100 terminal ctrl sequences"
+repository = "https://github.com/ypsitau/serkey"
+readme = { workspace = true }
 
 [dependencies]
 defmt = { version = "1.1.1", optional = true }
