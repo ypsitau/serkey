@@ -1,3 +1,5 @@
+use embedded_io_async as io_async;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;
@@ -15,23 +17,29 @@ async fn main() -> std::io::Result<()> {
             }
         }
     }
-    let mut stdin = embedded_io_adapters::tokio_1::FromTokio::new(tokio::io::stdin());
-    //let mut stdin = embedded_io_adapters::std::FromStd::new(std::io::stdin());
-    let mut serkey_reader = serkey::Reader::new();
-    print!("Ctrl-C to exit\r\n");
-    let mut sbuf: heapless::String<64> = heapless::String::new();
-    loop {
-        if let Some(key) = serkey_reader.read_key(&mut stdin).await {
-            sbuf.clear();
-            format_key(&mut sbuf, &key);
-            print!("{}\r\n", sbuf);
-            if let serkey::Key::CookedCtrl(0x03) = key {
-                break;
-            }
-        }
-    }
+    let stdin = embedded_io_adapters::tokio_1::FromTokio::new(tokio::io::stdin());
+    //let stdin = embedded_io_adapters::std::FromStd::new(std::io::stdin());
+    run(stdin).await;
     crossterm::terminal::disable_raw_mode()?;
     Ok(())
+}
+
+async fn run(mut reader_src: impl io_async::Read) {
+    let mut serkey_reader = serkey::Reader::new();
+    print!("Ctrl-C to exit\r\n");
+    //let mut sbuf: heapless::String<64> = heapless::String::new();
+    loop {
+        if let Some(key) = serkey_reader.read_key(&mut reader_src).await {
+            println!("{:?}", key);
+            if let serkey::Key::CookedCtrl(0x03) = key { break; }
+            //sbuf.clear();
+            //format_key(&mut sbuf, &key);
+            //print!("{}\r\n", sbuf);
+            //if let serkey::Key::CookedCtrl(0x03) = key {
+            //    break;
+            //}
+        }
+    }
 }
 
 fn format_key(w: &mut impl core::fmt::Write, key: &serkey::Key) {
