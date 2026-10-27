@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 defmt = { version = "1.1.1", optional = true }
 heapless = { version = "0.9.3" }
-embedded-keycode = { git = "https://github.com/ypsitau/embedded-keycode" }
 embedded-io-async = { version = "0.7.0" }
+embedded-keycode = { version = "0.1.1" }
 
 [features]
 default = []
