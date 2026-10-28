@@ -6,6 +6,7 @@ use embassy_executor::Spawner;
 use embassy_rp as rp;
 use embassy_usb as usb;
 use static_cell::StaticCell;
+use core::fmt::Write as _;
 use embedded_io_async::Write as _;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -67,18 +68,16 @@ async fn main(_spawner: Spawner) {
             STATIC_CELL.init([0u8; 64])
         };
         let mut cdc_receiver = cdc_receiver.into_buffered(buf_receiver);
-        let mut sbuf: heapless::String<64> = heapless::String::new();
         let mut serkey_reader = serkey::Reader::new();
+        let mut sbuf = heapless::String::<64>::new();
         loop {
             cdc_receiver.wait_connection().await;
             info!("Connected");
             loop {
                 if let Some(key) = serkey_reader.read_key(&mut cdc_receiver).await {
                     sbuf.clear();
-                    format_key(&mut sbuf, &key);
+                    write!(sbuf, "{}\r\n", key).unwrap();
                     cdc_sender.write_all(sbuf.as_bytes()).await.unwrap();
-                    cdc_sender.write_all(b"\r\n").await.unwrap();
-                    cdc_sender.flush().await.unwrap();
                 } else {
                     break;
                 }
@@ -87,45 +86,4 @@ async fn main(_spawner: Spawner) {
     };
     info!("Starting main loop");
     embassy_futures::join::join(fut_usb, fut_echo).await;
-}
-
-fn format_key(w: &mut impl core::fmt::Write, key: &serkey::Key) {
-    use serkey::{Key, Modifier};
-    fn sub(w: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
-        write!(w, "{}", text).ok();
-        if modifier.is_shift() { write!(w, " + Shift").ok(); }
-        if modifier.is_ctrl() { write!(w, " + Ctrl").ok(); }
-        if modifier.is_alt() { write!(w, " + Alt").ok(); }
-    }
-    match key {
-        Key::CookedChar(ch)      => { write!(w, "CookedChar: {}", ch).ok(); }
-        Key::CookedCtrl(n)       => { write!(w, "CookedCtrl: 0x{:02x}", n).ok(); }
-        Key::Tab(attr)           => { sub(w, "Tab", attr.modifier()); }
-        Key::Enter(attr)         => { sub(w, "Enter", attr.modifier()); }
-        Key::Left(attr)          => { sub(w, "Left", attr.modifier()); }
-        Key::Right(attr)         => { sub(w, "Right", attr.modifier()); }
-        Key::Up(attr)            => { sub(w, "Up", attr.modifier()); }
-        Key::Down(attr)          => { sub(w, "Down", attr.modifier()); }
-        Key::Home(attr)          => { sub(w, "Home", attr.modifier()); }
-        Key::End(attr)           => { sub(w, "End", attr.modifier()); }
-        Key::PageUp(attr)        => { sub(w, "PageUp", attr.modifier()); }
-        Key::PageDown(attr)      => { sub(w, "PageDown", attr.modifier()); }
-        Key::Backspace(attr)     => { sub(w, "Backspace", attr.modifier()); }
-        Key::Delete(attr)        => { sub(w, "Delete", attr.modifier()); }
-        Key::Insert(attr)        => { sub(w, "Insert", attr.modifier()); }
-        Key::Esc(attr)           => { sub(w, "Esc", attr.modifier()); }
-        Key::F1(attr)            => { sub(w, "F1", attr.modifier()); }
-        Key::F2(attr)            => { sub(w, "F2", attr.modifier()); }
-        Key::F3(attr)            => { sub(w, "F3", attr.modifier()); }
-        Key::F4(attr)            => { sub(w, "F4", attr.modifier()); }
-        Key::F5(attr)            => { sub(w, "F5", attr.modifier()); }
-        Key::F6(attr)            => { sub(w, "F6", attr.modifier()); }
-        Key::F7(attr)            => { sub(w, "F7", attr.modifier()); }
-        Key::F8(attr)            => { sub(w, "F8", attr.modifier()); }
-        Key::F9(attr)            => { sub(w, "F9", attr.modifier()); }
-        Key::F10(attr)           => { sub(w, "F10", attr.modifier()); }
-        Key::F11(attr)           => { sub(w, "F11", attr.modifier()); }
-        Key::F12(attr)           => { sub(w, "F12", attr.modifier()); }
-        _ => ()
-    }
 }

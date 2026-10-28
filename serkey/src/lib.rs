@@ -1,61 +1,48 @@
-//! A simple keycode parser for handling UTF-8 and VT100 terminal ctrl sequences.
+//! A simple keycode parser for handling UTF-8 and VT100 terminal control sequences.
 //!
 //! # Example
 //! 
 //! Create a new parser instance using `serkey::Reader::new()`.
 //!
 //! ```rust
-//! let mut reader = serkey::Reader::new();
+//! let mut serkey_reader = serkey::Reader::new();
 //! ```
-//! Call `serkey::Reader::push()` to feed bytes into the reader and `serkey::Reader::next_key()` to retrieve parsed keycodes.
-//! In the following example, assume that `buf` contains the bytes read from the serial device such as UART, USB CDC, and network sockets.
+//!
+//! The function `serkey::Reader::read_key` reads a key from the given reader asynchronously and returns it as an `Option<Key>`.
 //!
 //! ```rust
-//! fn feed_parser(reader: &mut serkey::Reader, buf: &[u8]) {
-//!     use core::fmt::Write as _;
-//!     use serkey::{Key, Modifier};
-//!     fn write_key(strbuf: &mut impl core::fmt::Write, text: &str, modifier: Modifier) {
-//!         write!(strbuf, "{}{}{}{}", text,
-//!             if modifier.is_shift() { " + Shift" } else { "" },
-//!             if modifier.is_ctrl() { " + Ctrl" } else { "" },
-//!             if modifier.is_alt() { " + Alt" } else { "" }).ok();
-//!     }
-//!     let mut strbuf: heapless::String<64> = heapless::String::new();
-//!     for &byte in buf {
-//!         reader.push(byte);
-//!         while let Some(key) = reader.next_key() {
+//! async fn print_key_async(mut reader: impl embedded_io_async::Read) {
+//!     let mut serkey_reader = serkey::Reader::new();
+//!     loop {
+//!         if let Some(key) = serkey_reader.read_key(&mut reader).await {
 //!             match key {
-//!                 Key::CookedChar(ch)      => { write!(strbuf, "CookedChar: {}", ch).ok(); }
-//!                 Key::CookedCtrl(n)       => { write!(strbuf, "CookedCtrl: 0x{:02x}", n).ok(); }
-//!                 Key::Tab(attr)           => { write_key(&mut strbuf, "Tab", attr.modifier()); }
-//!                 Key::Enter(attr)         => { write_key(&mut strbuf, "Enter", attr.modifier()); }
-//!                 Key::Left(attr)          => { write_key(&mut strbuf, "Left", attr.modifier()); }
-//!                 Key::Right(attr)         => { write_key(&mut strbuf, "Right", attr.modifier()); }
-//!                 Key::Up(attr)            => { write_key(&mut strbuf, "Up", attr.modifier()); }
-//!                 Key::Down(attr)          => { write_key(&mut strbuf, "Down", attr.modifier()); }
-//!                 Key::Home(attr)          => { write_key(&mut strbuf, "Home", attr.modifier()); }
-//!                 Key::End(attr)           => { write_key(&mut strbuf, "End", attr.modifier()); }
-//!                 Key::PageUp(attr)        => { write_key(&mut strbuf, "PageUp", attr.modifier()); }
-//!                 Key::PageDown(attr)      => { write_key(&mut strbuf, "PageDown", attr.modifier()); }
-//!                 Key::Backspace(attr)     => { write_key(&mut strbuf, "Backspace", attr.modifier()); }
-//!                 Key::Delete(attr)        => { write_key(&mut strbuf, "Delete", attr.modifier()); }
-//!                 Key::Insert(attr)        => { write_key(&mut strbuf, "Insert", attr.modifier()); }
-//!                 Key::Esc(attr)           => { write_key(&mut strbuf, "Esc", attr.modifier()); }
-//!                 Key::F1(attr)            => { write_key(&mut strbuf, "F1", attr.modifier()); }
-//!                 Key::F2(attr)            => { write_key(&mut strbuf, "F2", attr.modifier()); }
-//!                 Key::F3(attr)            => { write_key(&mut strbuf, "F3", attr.modifier()); }
-//!                 Key::F4(attr)            => { write_key(&mut strbuf, "F4", attr.modifier()); }
-//!                 Key::F5(attr)            => { write_key(&mut strbuf, "F5", attr.modifier()); }
-//!                 Key::F6(attr)            => { write_key(&mut strbuf, "F6", attr.modifier()); }
-//!                 Key::F7(attr)            => { write_key(&mut strbuf, "F7", attr.modifier()); }
-//!                 Key::F8(attr)            => { write_key(&mut strbuf, "F8", attr.modifier()); }
-//!                 Key::F9(attr)            => { write_key(&mut strbuf, "F9", attr.modifier()); }
-//!                 Key::F10(attr)           => { write_key(&mut strbuf, "F10", attr.modifier()); }
-//!                 Key::F11(attr)           => { write_key(&mut strbuf, "F11", attr.modifier()); }
-//!                 Key::F12(attr)           => { write_key(&mut strbuf, "F12", attr.modifier()); }
-//!                 _ => { continue; }
+//!                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
+//!                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),
+//!                 serkey::Key::CookedCtrl(0x03) => break,
+//!                 serkey::Key::Left(attr) => println!("[Left] is pressed with {:?}", attr),
+//!                 serkey::Key::Delete(attr) => println!("[Delete] is pressed with {:?}", attr),
+//!                 _ => println!("{}", key),
 //!             }
-//!             info!("{}", strbuf.as_str());
+//!         }
+//!     }
+//! }
+//! ```
+//!
+//! The function `serkey::Reader::read_key_blocking` reads a key from the given reader synchronously and returns it as an `Option<Key>`.
+//!
+//! ```rust
+//! fn print_key_blocking(mut reader: impl embedded_io::Read) {
+//!     let mut serkey_reader = serkey::Reader::new();
+//!     loop {
+//!         if let Some(key) = serkey_reader.read_key_blocking(&mut reader) {
+//!             match key {
+//!                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
+//!                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),
+//!                 serkey::Key::CookedCtrl(0x03) => break,
+//!                 serkey::Key::Left(attr) => println!("[Left] is pressed with {:?}", attr),
+//!                 serkey::Key::Delete(attr) => println!("[Delete] is pressed with {:?}", attr),
+//!                 _ => println!("{}", key),
+//!             }
 //!         }
 //!     }
 //! }
