@@ -1,10 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "lib",
+    "serkey",
     "main",
 ]
-exclude = ["example"]
+exclude = ["examples"]
 
 [workspace.dependencies]
-serkey = { path = "lib" }
+serkey = { path = "serkey" }
