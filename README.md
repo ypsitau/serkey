@@ -18,6 +18,8 @@ The associated functions `serkey::Reader::read_key` and `serkey::Reader::read_ke
 
 ## Examples
 
+Below is an example of how to use the asynchronous key reader.
+
 ```rust
 async fn print_key_async(mut reader: impl embedded_io_async::Read) {
     let mut serkey_reader = serkey::Reader::new();
@@ -35,6 +37,8 @@ async fn print_key_async(mut reader: impl embedded_io_async::Read) {
     }
 }
 ```
+
+Below is an example of how to use the blocking key reader.
 
 ```rust
 fn print_key_blocking(mut reader: impl embedded_io::Read) {
