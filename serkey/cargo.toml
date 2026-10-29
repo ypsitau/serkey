@@ -1,6 +1,6 @@
 [package]
 name = "serkey"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Yutaka Saito <ypsitau@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -9,11 +9,11 @@ repository = "https://github.com/ypsitau/serkey"
 readme = { workspace = true }
 
 [dependencies]
-defmt = { version = "1.2.0", optional = true }
-heapless = { version = "0.9.3" }
-embedded-io = { version = "0.7.1" }
-embedded-io-async = { version = "0.7.0" }
-embedded-keycode = { version = "0.1.2" }
+defmt = { workspace = true, optional = true }
+heapless = { workspace = true }
+embedded-io = { workspace = true }
+embedded-io-async = { workspace = true }
+embedded-keycode = { workspace = true }
 
 [features]
 default = []
