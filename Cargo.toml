@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "serkey",
-    "main",
+    "main-async",
+    "main-blocking",
 ]
 exclude = ["examples"]
 
