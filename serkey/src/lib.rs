@@ -53,7 +53,7 @@ use heapless::Vec;
 use heapless::spsc::Queue;
 use embedded_io as io;
 use embedded_io_async as io_async;
-pub use keycode::{Key, Modifier};
+pub use keycode::{Key, Modifier, Ctrl};
 
 #[derive(Debug, PartialEq, Eq)]
 enum Stat {
