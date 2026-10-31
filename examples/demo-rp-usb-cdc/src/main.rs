@@ -74,7 +74,7 @@ async fn main(_spawner: Spawner) {
             cdc_receiver.wait_connection().await;
             info!("Connected");
             loop {
-                if let Some(key) = serkey_reader.read_key(&mut cdc_receiver).await {
+                if let Ok(key) = serkey_reader.read_key(&mut cdc_receiver).await {
                     sbuf.clear();
                     write!(sbuf, "{}\r\n", key).unwrap();
                     cdc_sender.write_all(sbuf.as_bytes()).await.unwrap();
@@ -82,6 +82,7 @@ async fn main(_spawner: Spawner) {
                     break;
                 }
             }
+            info!("Disconnected");
         }
     };
     info!("Starting main loop");

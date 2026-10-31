@@ -21,7 +21,7 @@ fn main() -> std::io::Result<()> {
 fn print_key_blocking(mut reader: impl embedded_io::Read) {
     let mut serkey_reader = serkey::Reader::new();
     loop {
-        if let Some(key) = serkey_reader.read_key_blocking(&mut reader) {
+        if let Ok(key) = serkey_reader.read_key_blocking(&mut reader) {
             match key {
                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),

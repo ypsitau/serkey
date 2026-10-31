@@ -99,30 +99,24 @@ impl Reader {
         }
     }
 
-    pub async fn read_key(&mut self, reader: &mut impl io_async::Read) -> Option<Key> {
+    pub async fn read_key<Reader>(&mut self, reader: &mut Reader) -> Result<Key, Reader::Error>
+    where Reader: io_async::Read {
         let mut buf = [0u8; 16];
         loop {
-            if let Some(key) = self.next_key() {
-                return Some(key);
-            }
-            let bytes = reader.read(&mut buf).await.unwrap();
-            if bytes == 0 { break; }
+            if let Some(key) = self.next_key() { return Ok(key); }
+            let bytes = reader.read(&mut buf).await?;
             self.push_raw_bytes(&buf[..bytes]);
         }
-        None
     }
 
-    pub fn read_key_blocking(&mut self, reader: &mut impl io::Read) -> Option<Key> {
+    pub fn read_key_blocking<Reader>(&mut self, reader: &mut Reader) -> Result<Key, Reader::Error>
+    where Reader: io::Read {
         let mut buf = [0u8; 16];
         loop {
-            if let Some(key) = self.next_key() {
-                return Some(key);
-            }
-            let bytes = reader.read(&mut buf).unwrap();
-            if bytes == 0 { break; }
+            if let Some(key) = self.next_key() { return Ok(key); }
+            let bytes = reader.read(&mut buf)?;
             self.push_raw_bytes(&buf[..bytes]);
         }
-        None
     }
 
     pub fn next_key(&mut self) -> Option<Key> {

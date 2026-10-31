@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
 async fn print_key_async(mut reader: impl embedded_io_async::Read) {
     let mut serkey_reader = serkey::Reader::new();
     loop {
-        if let Some(key) = serkey_reader.read_key(&mut reader).await {
+        if let Ok(key) = serkey_reader.read_key(&mut reader).await {
             match key {
                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),
