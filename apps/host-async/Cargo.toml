@@ -1,7 +1,8 @@
 [package]
-name = "main-async"
+name = "host-async"
 version = "0.1.0"
 edition = "2024"
+publish = false
 
 [dependencies]
 serkey = { workspace = true }

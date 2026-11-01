@@ -2,10 +2,13 @@
 resolver = "2"
 members = [
     "serkey",
-    "main-async",
-    "main-blocking",
+    "apps/host-blocking",
+    "apps/host-async",
 ]
-exclude = ["examples"]
+
+default-members = [
+    "apps/host-async",
+]
 
 [workspace.dependencies]
 serkey = { path = "serkey" }

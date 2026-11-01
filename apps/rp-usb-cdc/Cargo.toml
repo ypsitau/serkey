@@ -1,8 +1,12 @@
 [package]
 edition = "2024"
-name = "demo-rp-usb-cdc"
+name = "rp-usb-cdc"
 version = "0.1.0"
 license = "MIT or Apache-2.0"
+publish = false
+
+[workspace]
+# An empty workspace section means this package is independent.
 
 [build-dependencies]
 regex = "1.11.0"
@@ -23,14 +27,15 @@ embassy-sync = "0.8.0"
 embassy-time = { version = "0.5.1" }
 embedded-hal-1 = { package = "embedded-hal", version = "1.0" }
 embedded-hal-async = { version = "1.0.0", features = ["defmt-03"] }
-embedded-io-async = "0.7"
-heapless = "0.9.3"
+embedded-io-async = { version = "0.7.0" }
+heapless = { version = "0.9.3" }
 portable-atomic = { version = "1.5", features = ["critical-section"] } # required for static_cell
-static_cell = "2"
+static_cell = { version = "2" }
 embassy-usb = { version = "0.6.0", features = ["defmt"] }
 embassy-usb-driver = { version = "0.2.2", features = ["defmt"] }
+embedded-io = { version = "0.7.1" }
+
 serkey = { path = "../../serkey", features = ["defmt"] }
-embedded-io = "0.7.1"
 
 [target.'cfg( target_arch = "arm" )'.dependencies]
 panic-probe = { version = "1", features = ["print-defmt"] }
