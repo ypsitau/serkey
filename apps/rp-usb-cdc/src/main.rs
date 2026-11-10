@@ -8,6 +8,7 @@ use embassy_usb as usb;
 use static_cell::StaticCell;
 use core::fmt::Write as _;
 use embedded_io_async::Write as _;
+use serkey::ReadKey as _;
 use {defmt_rtt as _, panic_probe as _};
 
 rp::bind_interrupts!(struct Irqs {
@@ -72,9 +73,9 @@ async fn main(_spawner: Spawner) {
         loop {
             cdc_receiver.wait_connection().await;
             info!("Connected");
-            let mut serkey_reader = serkey::Reader::new(&mut cdc_receiver);
+            let mut key_reader = serkey::Reader::new(&mut cdc_receiver);
             loop {
-                if let Ok(key) = serkey_reader.read_key().await {
+                if let Ok(key) = key_reader.read_key().await {
                     sbuf.clear();
                     write!(sbuf, "{}\r\n", key).unwrap();
                     cdc_sender.write_all(sbuf.as_bytes()).await.unwrap();
