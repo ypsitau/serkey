@@ -6,15 +6,15 @@ license = "MIT or Apache-2.0"
 publish = false
 
 [workspace]
-# An empty workspace section means this package is independent.
+# An empty workspace section means that this package is independent of the parent workspace.
 
 [build-dependencies]
-regex = "1.11.0"
+regex = { version = "1.11.0" }
 
 [dependencies]
-cortex-m-rt = "0.7"
-defmt = "1"
-defmt-rtt = "1"
+cortex-m-rt = { version = "0.7" }
+defmt = { version = "1" }
+defmt-rtt = { version = "1" }
 embassy-embedded-hal = { version = "0.6.0", features = ["defmt"] }
 embassy-executor = { version = "0.10.0", features = [
     "platform-cortex-m",
@@ -22,8 +22,8 @@ embassy-executor = { version = "0.10.0", features = [
     "executor-interrupt",
     "defmt",
 ] }
-embassy-futures = "0.1.2"
-embassy-sync = "0.8.0"
+embassy-futures = { version = "0.1.2" }
+embassy-sync = { version = "0.8.0" }
 embassy-time = { version = "0.5.1" }
 embedded-hal-1 = { package = "embedded-hal", version = "1.0" }
 embedded-hal-async = { version = "1.0.0", features = ["defmt-03"] }

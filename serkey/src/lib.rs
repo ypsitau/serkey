@@ -2,19 +2,19 @@
 //!
 //! # Example
 //! 
-//! Create a new parser instance using `serkey::Reader::new()`.
+//! Create a new parser instance using `serkey::Parser::new()`.
 //!
 //! ```rust
-//! let mut serkey_reader = serkey::Reader::new();
+//! let mut serkey_parser = serkey::Parser::new();
 //! ```
 //!
-//! The function `serkey::Reader::read_key` reads a key from the given reader asynchronously and returns it as an `Option<Key>`.
+//! `serkey::Reader::read_key` reads a key asynchronously from the reader supplied to `Reader::new`.
 //!
 //! ```rust
-//! async fn print_key_async(mut reader: impl embedded_io_async::Read) {
-//!     let mut serkey_reader = serkey::Reader::new();
+//! async fn print_key_async(reader: impl embedded_io_async::Read) {
+//!     let mut serkey_reader = serkey::Reader::new(reader);
 //!     loop {
-//!         if let Some(key) = serkey_reader.read_key(&mut reader).await {
+//!         if let Ok(key) = serkey_reader.read_key().await {
 //!             match key {
 //!                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
 //!                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),
@@ -28,13 +28,13 @@
 //! }
 //! ```
 //!
-//! The function `serkey::Reader::read_key_blocking` reads a key from the given reader synchronously and returns it as an `Option<Key>`.
+//! `serkey::Parser::read_key_blocking` reads a key from the given reader synchronously.
 //!
 //! ```rust
 //! fn print_key_blocking(mut reader: impl embedded_io::Read) {
-//!     let mut serkey_reader = serkey::Reader::new();
+//!     let mut serkey_reader = serkey::ReaderBlocking::new(reader);
 //!     loop {
-//!         if let Some(key) = serkey_reader.read_key_blocking(&mut reader) {
+//!         if let Ok(key) = serkey_reader.read_key_blocking() {
 //!             match key {
 //!                 serkey::Key::CookedChar('a') => println!("'a' is pressed"),
 //!                 serkey::Key::CookedCtrl(0x01) => println!("Ctrl-A is pressed"),
@@ -76,7 +76,7 @@ enum Stat {
     APC,
 }
 
-pub struct Reader {
+pub struct Parser {
     queue: Queue<Key, 8>,
     stat: Stat,
     param_accum: u16,
@@ -86,9 +86,9 @@ pub struct Reader {
     utf8_remain: u8,
 }
 
-impl Reader {
+impl Parser {
     pub fn new() -> Self {
-        Reader {
+        Parser {
             queue: Queue::new(),
             stat: Stat::FirstByte,
             param_accum: 0,
@@ -96,26 +96,6 @@ impl Reader {
             buf_intermediate: Vec::new(),
             utf8_accum: 0,
             utf8_remain: 0,
-        }
-    }
-
-    pub async fn read_key<Reader>(&mut self, reader: &mut Reader) -> Result<Key, Reader::Error>
-    where Reader: io_async::Read {
-        let mut buf = [0u8; 16];
-        loop {
-            if let Some(key) = self.next_key() { return Ok(key); }
-            let bytes = reader.read(&mut buf).await?;
-            self.push_raw_bytes(&buf[..bytes]);
-        }
-    }
-
-    pub fn read_key_blocking<Reader>(&mut self, reader: &mut Reader) -> Result<Key, Reader::Error>
-    where Reader: io::Read {
-        let mut buf = [0u8; 16];
-        loop {
-            if let Some(key) = self.next_key() { return Ok(key); }
-            let bytes = reader.read(&mut buf)?;
-            self.push_raw_bytes(&buf[..bytes]);
         }
     }
 
@@ -394,6 +374,56 @@ impl Reader {
                     self.stat = Stat::FirstByte;
                 }
             }
+        }
+    }
+}
+
+pub struct Reader<ReaderSrc> {
+    parser: Parser,
+    reader_src: ReaderSrc,
+}
+
+impl<ReaderSrc> Reader<ReaderSrc>
+where ReaderSrc: io_async::Read,
+{
+    pub fn new(reader_src: ReaderSrc) -> Self {
+        Self {
+            parser: Parser::new(),
+            reader_src,
+        }
+    }
+
+    pub async fn read_key(&mut self) -> Result<keycode::Key, ReaderSrc::Error> {
+        let mut buf = [0u8; 16];
+        loop {
+            if let Some(key) = self.parser.next_key() { return Ok(key); }
+            let bytes = self.reader_src.read(&mut buf).await?;
+            self.parser.push_raw_bytes(&buf[..bytes]);
+        }
+    }
+}
+
+pub struct ReaderBlocking<ReaderSrc> {
+    parser: Parser,
+    reader_src: ReaderSrc,
+}
+
+impl<ReaderSrc> ReaderBlocking<ReaderSrc>
+where ReaderSrc: io::Read,
+{
+    pub fn new(reader_src: ReaderSrc) -> Self {
+        Self {
+            parser: Parser::new(),
+            reader_src,
+        }
+    }
+
+    pub fn read_key_blocking(&mut self) -> Result<keycode::Key, ReaderSrc::Error> {
+        let mut buf = [0u8; 16];
+        loop {
+            if let Some(key) = self.parser.next_key() { return Ok(key); }
+            let bytes = self.reader_src.read(&mut buf)?;
+            self.parser.push_raw_bytes(&buf[..bytes]);
         }
     }
 }

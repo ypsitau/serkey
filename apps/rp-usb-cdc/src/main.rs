@@ -68,13 +68,13 @@ async fn main(_spawner: Spawner) {
             STATIC_CELL.init([0u8; 64])
         };
         let mut cdc_receiver = cdc_receiver.into_buffered(buf_receiver);
-        let mut serkey_reader = serkey::Reader::new();
         let mut sbuf = heapless::String::<64>::new();
         loop {
             cdc_receiver.wait_connection().await;
             info!("Connected");
+            let mut serkey_reader = serkey::Reader::new(&mut cdc_receiver);
             loop {
-                if let Ok(key) = serkey_reader.read_key(&mut cdc_receiver).await {
+                if let Ok(key) = serkey_reader.read_key().await {
                     sbuf.clear();
                     write!(sbuf, "{}\r\n", key).unwrap();
                     cdc_sender.write_all(sbuf.as_bytes()).await.unwrap();
