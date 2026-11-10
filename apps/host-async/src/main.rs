@@ -1,3 +1,5 @@
+use serkey::ReadKey as _;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;

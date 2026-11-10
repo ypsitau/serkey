@@ -1,3 +1,5 @@
+use serkey::ReadKeyBlocking as _;
+
 fn main() -> std::io::Result<()> {
     crossterm::terminal::enable_raw_mode()?;
     #[cfg(windows)]
